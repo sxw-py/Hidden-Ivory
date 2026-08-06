@@ -2,16 +2,17 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import IntroOverlay from '../components/IntroOverlay';
 import ProductCard from '../components/ProductCard';
-import { products } from '../lib/products';
+import { useProducts } from '../lib/useProducts';
 
-function useReveal() {
+function useReveal(deps: unknown[] = []) {
   useEffect(() => {
     const observer = new IntersectionObserver(entries => {
       entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
     }, { threshold: 0.12 });
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
     return () => observer.disconnect();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
 }
 
 function useIsMobile() {
@@ -25,8 +26,9 @@ function useIsMobile() {
 }
 
 export default function HomePage() {
-  useReveal();
   const isMobile = useIsMobile();
+  const { products, loading } = useProducts();
+  useReveal([products]);
 
   return (
     <>
@@ -91,13 +93,17 @@ export default function HomePage() {
             <div style={{ width: 60, height: 1, background: 'linear-gradient(90deg,transparent,#000000,transparent)', margin: '0 auto' }} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'clamp(0.75rem, 3vw, 1.5rem)' }}>
-            {products.slice(0, 4).map((p, i) => (
-              <div key={p.id} className={`reveal reveal-delay-${Math.min(i + 1, 4)}`}>
-                <ProductCard product={p} priority={i === 0} />
-              </div>
-            ))}
-          </div>
+          {loading ? (
+            <div style={{ textAlign:'center', padding:'3rem', fontFamily:'"Cormorant SC",serif', fontSize:'0.85rem', letterSpacing:'0.2em', color:'#000000' }}>Loading…</div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'clamp(0.75rem, 3vw, 1.5rem)' }}>
+              {products.slice(0, 4).map((p, i) => (
+                <div key={p.id} className={`reveal reveal-delay-${Math.min(i + 1, 4)}`}>
+                  <ProductCard product={p} priority={i === 0} />
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="reveal" style={{ textAlign: 'center', marginTop: '3.5rem' }}>
             <Link to="/shop" style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.85rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#000000', textDecoration: 'none', borderBottom: '1px solid #000000', paddingBottom: 2, transition: 'all 0.3s ease' }}

@@ -2,17 +2,24 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import Carousel from '../components/Carousel';
 import ProductCard from '../components/ProductCard';
-import { getProductById, products } from '../lib/products';
+import { useProduct, useProducts } from '../lib/useProducts';
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const product = getProductById(id!);
+  const { product, loading: productLoading } = useProduct(id!);
+  const { products } = useProducts();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [added, setAdded] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
+
+  if (productLoading) return (
+    <div style={{ minHeight:'100vh', background:'#000000', display:'flex', alignItems:'center', justifyContent:'center', paddingTop:130 }}>
+      <p style={{ fontFamily:'"Cormorant SC",serif', fontSize:'0.85rem', letterSpacing:'0.2em', color:'#e5b876' }}>Loading…</p>
+    </div>
+  );
 
   if (!product) return <Navigate to="/shop" replace />;
 
@@ -30,9 +37,11 @@ export default function ProductDetailPage() {
       {/* Breadcrumb */}
       <div style={{ maxWidth: 1400, margin: '0 auto', padding: '1.5rem 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: '"Cormorant SC",serif', fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#ffffff' }}>
         {[['Home', '/'], ['Shop', '/shop']].map(([label, to]) => (
-          <><Link key={to} to={to} style={{ color: '#ffffff', textDecoration: 'none', transition: 'color 0.3s ease' }}
-            onMouseEnter={e => ((e.target as HTMLElement).style.color = '#e5b876')}
-            onMouseLeave={e => ((e.target as HTMLElement).style.color = '#ffffff')}>{label}</Link><span>/</span></>
+          <span key={to} style={{ display: 'contents' }}>
+            <Link to={to} style={{ color: '#ffffff', textDecoration: 'none', transition: 'color 0.3s ease' }}
+              onMouseEnter={e => ((e.target as HTMLElement).style.color = '#e5b876')}
+              onMouseLeave={e => ((e.target as HTMLElement).style.color = '#ffffff')}>{label}</Link><span>/</span>
+          </span>
         ))}
         <span style={{ color: '#ffffff' }}>{product.name}</span>
       </div>
