@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 function ToteBagIcon() {
   return (
@@ -30,11 +32,36 @@ const NAV_LINKS = [
 export default function Header() {
   const [scrollY, setScrollY] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [authMenuOpen, setAuthMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { user, loading: authLoading, signInWithGoogle, signOut } = useAuth();
+  const authRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    supabase.from('profiles').select('is_admin').eq('id', user.id).single()
+      .then(({ data }) => setIsAdmin(!!data?.is_admin));
+  }, [user]);
 
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Close auth dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (authRef.current && !authRef.current.contains(e.target as Node)) {
+        setAuthMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
 
   const isScrolled = scrollY > 120;
@@ -69,11 +96,67 @@ export default function Header() {
 
           {/* Icons */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-            <button aria-label="Account" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e5b876', padding: 4, display: 'flex', alignItems: 'center', transition: 'color 0.3s ease' }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#5e4018')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#e5b876')}>
-              <ProfileIcon />
-            </button>
+
+            {/* Auth button */}
+            <div ref={authRef} style={{ position: 'relative' }}>
+              {!authLoading && (
+                user ? (
+                  // Logged in — show avatar
+                  <>
+                    <button
+                      aria-label="Account menu"
+                      onClick={() => setAuthMenuOpen(o => !o)}
+                      style={{ background: 'none', border: '1.5px solid #e5b876', borderRadius: '50%', cursor: 'pointer', width: 32, height: 32, padding: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'border-color 0.3s ease' }}
+                      onMouseEnter={e => (e.currentTarget.style.borderColor = '#5e4018')}
+                      onMouseLeave={e => (e.currentTarget.style.borderColor = '#e5b876')}
+                    >
+                      {user.user_metadata?.avatar_url ? (
+                        <img src={user.user_metadata.avatar_url} alt="avatar" width={32} height={32} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                      ) : (
+                        <ProfileIcon />
+                      )}
+                    </button>
+                    {authMenuOpen && (
+                      <div style={{ position: 'absolute', top: '110%', right: 0, background: '#111111', border: '1px solid rgba(229,184,118,0.2)', minWidth: 180, zIndex: 200, padding: '0.5rem 0' }}>
+                        <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '0.85rem', color: '#e5b876', padding: '0.6rem 1rem 0.4rem', borderBottom: '1px solid rgba(229,184,118,0.1)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {user.user_metadata?.full_name ?? user.email}
+                        </p>
+                        {isAdmin && (
+                          <button
+                            onClick={() => { setAuthMenuOpen(false); navigate('/admin'); }}
+                            style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', fontFamily: '"Cormorant SC",serif', fontSize: '0.75rem', letterSpacing: '0.12em', color: '#ffffff', padding: '0.65rem 1rem', textAlign: 'left', textTransform: 'uppercase', transition: 'color 0.3s ease', borderBottom: '1px solid rgba(229,184,118,0.1)' }}
+                            onMouseEnter={e => (e.currentTarget.style.color = '#e5b876')}
+                            onMouseLeave={e => (e.currentTarget.style.color = '#ffffff')}
+                          >
+                            Admin Panel
+                          </button>
+                        )}
+                        <button
+                          onClick={() => { signOut(); setAuthMenuOpen(false); }}
+                          style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', fontFamily: '"Cormorant SC",serif', fontSize: '0.75rem', letterSpacing: '0.12em', color: '#ffffff', padding: '0.65rem 1rem', textAlign: 'left', textTransform: 'uppercase', transition: 'color 0.3s ease' }}
+                          onMouseEnter={e => (e.currentTarget.style.color = '#e5b876')}
+                          onMouseLeave={e => (e.currentTarget.style.color = '#ffffff')}
+                        >
+                          Sign Out
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  // Logged out — show sign-in button
+                  <button
+                    aria-label="Sign in with Google"
+                    onClick={signInWithGoogle}
+                    title="Sign in with Google"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e5b876', padding: 4, display: 'flex', alignItems: 'center', transition: 'color 0.3s ease' }}
+                    onMouseEnter={e => (e.currentTarget.style.color = '#5e4018')}
+                    onMouseLeave={e => (e.currentTarget.style.color = '#e5b876')}
+                  >
+                    <ProfileIcon />
+                  </button>
+                )
+              )}
+            </div>
 
             <button aria-label="Cart" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e5b876', padding: 4, display: 'flex', alignItems: 'center', position: 'relative', transition: 'color 0.3s ease' }}
               onMouseEnter={e => (e.currentTarget.style.color = '#5e4018')}

@@ -8,9 +8,9 @@ function mapRow(row: Record<string, unknown>): Product {
     id:          row.id as string,
     name:        row.name as string,
     price:       row.price as number,
-    images:      row.images as string[],
+    images:      (row.images as string[]) || [],
     description: row.description as string,
-    details:     row.details as string[],
+    details:     (row.details as string[]) || [],
     category:    row.category as string,
     sizes:       (row.sizes as string[] | null) ?? undefined,
     inStock:     row.in_stock as boolean,
@@ -24,34 +24,41 @@ export function useProducts() {
 
   useEffect(() => {
     supabase.from('products').select('*')
-      .then(({ data, error }) => {
-        if (error || !data || data.length === 0) {
-          setError(error?.message ?? null);
-        } else {
-          setProducts(data.map(mapRow));
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      .then(
+        ({ data, error }) => {
+          if (error || !data || data.length === 0) {
+            setError(error?.message ?? null);
+          } else {
+            setProducts(data.map(mapRow));
+          }
+          setLoading(false);
+        },
+        () => setLoading(false)
+      );
   }, []);
 
   return { products, loading, error };
 }
 
 export function useProduct(id: string) {
-  const [product, setProduct] = useState<Product | null>(null);
+  const staticMatch = staticProducts.find(p => p.id === id) ?? null;
+  const [product, setProduct] = useState<Product | null>(staticMatch);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
-    setProduct(null);
     supabase.from('products').select('*').eq('id', id).single()
-      .then(({ data, error }) => {
-        if (error) { setError(error.message); }
-        else if (data) { setProduct(mapRow(data as Record<string, unknown>)); }
-        setLoading(false);
-      });
+      .then(
+        ({ data, error }) => {
+          if (error || !data) {
+            setError(error?.message ?? null);
+          } else {
+            setProduct(mapRow(data as Record<string, unknown>));
+          }
+          setLoading(false);
+        },
+        () => setLoading(false)
+      );
   }, [id]);
 
   return { product, loading, error };
