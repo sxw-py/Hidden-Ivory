@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -34,7 +35,7 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [authMenuOpen, setAuthMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const { user, loading: authLoading, signInWithGoogle, signOut } = useAuth();
+  const { user, loading: authLoading, signInWithGoogleCredential, signOut } = useAuth();
   const authRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -144,16 +145,28 @@ export default function Header() {
                   </>
                 ) : (
                   // Logged out — show sign-in button
-                  <button
-                    aria-label="Sign in with Google"
-                    onClick={signInWithGoogle}
-                    title="Sign in with Google"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e5b876', padding: 4, display: 'flex', alignItems: 'center', transition: 'color 0.3s ease' }}
-                    onMouseEnter={e => (e.currentTarget.style.color = '#5e4018')}
-                    onMouseLeave={e => (e.currentTarget.style.color = '#e5b876')}
-                  >
-                    <ProfileIcon />
-                  </button>
+                  <div style={{ position: 'relative', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {/* The custom button they love */}
+                    <button
+                      aria-label="Sign in with Google"
+                      title="Sign in with Google"
+                      style={{ position: 'absolute', inset: 0, background: 'none', border: 'none', color: '#e5b876', padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.3s ease' }}
+                    >
+                      <ProfileIcon />
+                    </button>
+                    {/* The invisible Google button capturing the click */}
+                    <div style={{ position: 'absolute', inset: 0, opacity: 0.001, zIndex: 10, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <GoogleLogin
+                        type="icon"
+                        shape="circle"
+                        size="medium"
+                        onSuccess={(res) => {
+                          if (res.credential) signInWithGoogleCredential(res.credential);
+                        }}
+                        onError={() => console.error('Login Failed')}
+                      />
+                    </div>
+                  </div>
                 )
               )}
             </div>

@@ -57,7 +57,14 @@ export default function ProductDetailPage() {
           <div>
             <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.7rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#e5b876', marginBottom: '0.5rem' }}>{product.category}</p>
             <h1 style={{ fontFamily: '"Cormorant Garamond",serif', fontWeight: 500, fontSize: 'clamp(1.8rem,4vw,2.5rem)', color: '#e5b876', lineHeight: 1.15, marginBottom: '0.75rem' }}>{product.name}</h1>
-            <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '1.4rem', color: '#e5b876', fontWeight: 500, letterSpacing: '0.05em' }}>R{product.price.toFixed(2)}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '1.4rem', color: '#e5b876', fontWeight: 500, letterSpacing: '0.05em' }}>R{product.price.toFixed(2)}</p>
+              {!product.inStock && (
+                <span style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.75rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#ff6b6b', border: '1px solid #ff6b6b', padding: '0.25rem 0.5rem', borderRadius: 4 }}>
+                  Out of Stock
+                </span>
+              )}
+            </div>
           </div>
 
           <div style={{ height: 1, background: 'rgba(229,184,118,0.2)' }} />
@@ -82,9 +89,9 @@ export default function ProductDetailPage() {
             {product.sizes && !selectedSize && <p style={{ marginTop: '0.5rem', fontFamily: '"Cormorant Garamond",serif', fontSize: '0.85rem', color: '#ffffff', fontStyle: 'italic' }}>Please select a size</p>}
           </div>
 
-          <button onClick={handleAdd} className="btn-gold" style={{ width: '100%', justifyContent: 'center' }}
-            disabled={!!(product.sizes && !selectedSize)}>
-            <span>{added ? '✓ Added to Cart' : 'Add to Cart'}</span>
+          <button onClick={handleAdd} className="btn-gold" style={{ width: '100%', justifyContent: 'center', opacity: !product.inStock ? 0.5 : 1, cursor: !product.inStock ? 'not-allowed' : 'pointer' }}
+            disabled={!product.inStock || !!(product.sizes && !selectedSize)}>
+            <span>{!product.inStock ? 'Out of Stock' : added ? '✓ Added to Cart' : 'Add to Cart'}</span>
           </button>
 
           {/* Delivery box */}

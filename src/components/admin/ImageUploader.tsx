@@ -17,7 +17,10 @@ export default function ImageUploader({ productId, onUploaded }: Props) {
     const ext  = file.name.split('.').pop();
     const path = `${productId}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from('product-images').upload(path, file, { upsert: true });
-    if (!error) {
+    if (error) {
+      console.error('Upload error:', error);
+      alert('Upload failed: ' + error.message);
+    } else {
       const { data } = supabase.storage.from('product-images').getPublicUrl(path);
       onUploaded(data.publicUrl);
     }
