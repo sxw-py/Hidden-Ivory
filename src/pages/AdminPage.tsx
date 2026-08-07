@@ -29,6 +29,7 @@ export default function AdminPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const [orderToClear, setOrderToClear] = useState<string | null>(null);
 
   useEffect(() => { setLocalProducts(products); }, [products]);
 
@@ -61,8 +62,20 @@ export default function AdminPage() {
   };
 
   const updateOrderStatus = async (id: string, status: string) => {
+    if (status === 'fulfilled') {
+      setOrderToClear(id);
+      return;
+    }
+
     await supabase.from('orders').update({ status }).eq('id', id);
     setOrders(os => os.map(o => o.id === id ? { ...o, status } : o));
+  };
+
+  const confirmClearOrder = async () => {
+    if (!orderToClear) return;
+    await supabase.from('orders').delete().eq('id', orderToClear);
+    setOrders(os => os.filter(o => o.id !== orderToClear));
+    setOrderToClear(null);
   };
 
   const tabStyle = (active: boolean): React.CSSProperties => ({
@@ -170,12 +183,7 @@ export default function AdminPage() {
                           );
                         })}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-                        <a href="https://dashboard.yoco.com" target="_blank" rel="noopener noreferrer"
-                          style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.7rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#000', background: '#e5b876', padding: '0.5rem 1rem', textDecoration: 'none', borderRadius: 4, display: 'inline-block' }}>
-                          Yoco Dashboard ?
-                        </a>
-                      </div>
+
                     </div>
                   )}
                 </div>
@@ -184,6 +192,37 @@ export default function AdminPage() {
           )
         )}
       </div>
+
+      {/* Custom Confirmation Modal */}
+      {orderToClear && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem' }}>
+          <div style={{ background: '#0a0a0a', border: '1px solid rgba(229,184,118,0.2)', borderRadius: 8, padding: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: 450, width: '100%', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', textAlign: 'center' }}>
+            <div style={{ width: 60, height: 60, borderRadius: '50%', border: '2px solid #ff6b6b', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+              </svg>
+            </div>
+            
+            <h3 style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.8rem', color: '#ff6b6b', marginBottom: '1rem' }}>Clear Order Record?</h3>
+            <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1rem', color: 'rgba(255,255,255,0.7)', marginBottom: '2.5rem', lineHeight: 1.5 }}>
+              Are you sure you want to completely remove this order? This action permanently deletes it from your database and cannot be undone.
+            </p>
+            
+            <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
+              <button onClick={() => setOrderToClear(null)} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '0.8rem', fontFamily: '"Cormorant SC",serif', fontSize: '0.9rem', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: 4, transition: 'all 0.2s' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                Cancel
+              </button>
+              <button onClick={confirmClearOrder} style={{ flex: 1, background: '#ff6b6b', border: 'none', color: '#000', padding: '0.8rem', fontFamily: '"Cormorant SC",serif', fontSize: '0.9rem', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: 4, transition: 'all 0.2s', fontWeight: 'bold' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
+                Clear Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

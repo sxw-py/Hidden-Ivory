@@ -13,6 +13,7 @@ export default function CheckoutPage() {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState({
     fullName: user?.user_metadata?.full_name || '',
@@ -37,31 +38,60 @@ export default function CheckoutPage() {
     }
   }, [items, navigate]);
 
+  // Autofill shipping details from previous order if user is logged in
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchLastOrder = async () => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+        
+      if (data) {
+        setFormData(prev => ({
+          ...prev,
+          phone: prev.phone || data.customer_phone || '',
+          idNumber: prev.idNumber || data.customer_id_number || '',
+          address: prev.address || data.shipping_address || '',
+        }));
+      }
+    };
+    
+    fetchLastOrder();
+  }, [user]);
+
+  const validateField = (name: string, value: string) => {
+    let err = '';
+    if (!value.trim()) {
+      err = 'This field is required.';
+    } else if (name === 'email') {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) err = 'Please enter a valid email address.';
+    } else if (name === 'phone') {
+      const cleanPhone = value.replace(/[\s-]/g, '');
+      if (!/^(\+27|0)[6-8][0-9]{8}$/.test(cleanPhone)) err = 'Please enter a valid South African phone number (e.g. 082 123 4567).';
+    } else if (name === 'idNumber') {
+      const cleanId = value.replace(/[\s-]/g, '');
+      if (!/^[0-9]{13}$/.test(cleanId)) err = 'Please enter a valid 13-digit South African ID number.';
+    }
+    setFieldErrors(prev => ({ ...prev, [name]: err }));
+    return !err;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.fullName.trim() || !formData.email.trim() || !formData.phone.trim() || !formData.idNumber.trim() || !formData.address.trim()) {
-      setError('Please fill in all shipping details.');
-      return;
-    }
+    const isFullNameValid = validateField('fullName', formData.fullName);
+    const isEmailValid = validateField('email', formData.email);
+    const isPhoneValid = validateField('phone', formData.phone);
+    const isIdValid = validateField('idNumber', formData.idNumber);
+    const isAddressValid = validateField('address', formData.address);
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email.trim())) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-
-    const cleanPhone = formData.phone.replace(/[\s-]/g, '');
-    const phoneRegex = /^(\+27|0)[6-8][0-9]{8}$/;
-    if (!phoneRegex.test(cleanPhone)) {
-      setError('Please enter a valid South African phone number (e.g. 082 123 4567).');
-      return;
-    }
-
-    const cleanId = formData.idNumber.replace(/[\s-]/g, '');
-    const idRegex = /^[0-9]{13}$/;
-    if (!idRegex.test(cleanId)) {
-      setError('Please enter a valid 13-digit South African ID number.');
+    if (!isFullNameValid || !isEmailValid || !isPhoneValid || !isIdValid || !isAddressValid) {
+      setError('Please fix the errors above before checking out.');
       return;
     }
 
@@ -87,8 +117,8 @@ export default function CheckoutPage() {
           customer: {
             fullName: formData.fullName.trim(),
             email: formData.email.trim(),
-            phone: cleanPhone,
-            idNumber: cleanId,
+            phone: formData.phone.replace(/[\s-]/g, ''),
+            idNumber: formData.idNumber.replace(/[\s-]/g, ''),
             address: formData.address.trim(),
           },
           items: items,
@@ -120,20 +150,45 @@ export default function CheckoutPage() {
           <h2 style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '2rem', color: '#e5b876', marginBottom: '2rem' }}>Shipping Details</h2>
           
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <input type="text" placeholder="Full Name" required className="auth-input"
-              value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} />
+            <div>
+              <input type="text" placeholder="Full Name" required className="auth-input"
+                style={{ borderColor: fieldErrors.fullName ? '#ff6b6b' : undefined, width: '100%', boxSizing: 'border-box' }}
+                value={formData.fullName} onChange={e => { setFormData({...formData, fullName: e.target.value}); setFieldErrors(prev => ({...prev, fullName: ''})); }}
+                onBlur={() => validateField('fullName', formData.fullName)} />
+              {fieldErrors.fullName && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.fullName}</p>}
+            </div>
             
-            <input type="email" placeholder="Email Address" required className="auth-input"
-              value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+            <div>
+              <input type="email" placeholder="Email Address" required className="auth-input"
+                style={{ borderColor: fieldErrors.email ? '#ff6b6b' : undefined, width: '100%', boxSizing: 'border-box' }}
+                value={formData.email} onChange={e => { setFormData({...formData, email: e.target.value}); setFieldErrors(prev => ({...prev, email: ''})); }}
+                onBlur={() => validateField('email', formData.email)} />
+              {fieldErrors.email && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.email}</p>}
+            </div>
             
-            <input type="tel" placeholder="Phone Number" required className="auth-input"
-              value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+            <div>
+              <input type="tel" placeholder="Phone Number" required className="auth-input"
+                style={{ borderColor: fieldErrors.phone ? '#ff6b6b' : undefined, width: '100%', boxSizing: 'border-box' }}
+                value={formData.phone} onChange={e => { setFormData({...formData, phone: e.target.value}); setFieldErrors(prev => ({...prev, phone: ''})); }}
+                onBlur={() => validateField('phone', formData.phone)} />
+              {fieldErrors.phone && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.phone}</p>}
+            </div>
             
-            <input type="text" placeholder="SA ID Number" required className="auth-input"
-              value={formData.idNumber} onChange={e => setFormData({...formData, idNumber: e.target.value})} />
+            <div>
+              <input type="text" placeholder="SA ID Number" required className="auth-input"
+                style={{ borderColor: fieldErrors.idNumber ? '#ff6b6b' : undefined, width: '100%', boxSizing: 'border-box' }}
+                value={formData.idNumber} onChange={e => { setFormData({...formData, idNumber: e.target.value}); setFieldErrors(prev => ({...prev, idNumber: ''})); }}
+                onBlur={() => validateField('idNumber', formData.idNumber)} />
+              {fieldErrors.idNumber && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.idNumber}</p>}
+            </div>
             
-            <textarea placeholder="Full Delivery Address" required className="auth-input" rows={4}
-              value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+            <div>
+              <textarea placeholder="Full Delivery Address" required className="auth-input" rows={4}
+                style={{ borderColor: fieldErrors.address ? '#ff6b6b' : undefined, width: '100%', boxSizing: 'border-box' }}
+                value={formData.address} onChange={e => { setFormData({...formData, address: e.target.value}); setFieldErrors(prev => ({...prev, address: ''})); }}
+                onBlur={() => validateField('address', formData.address)} />
+              {fieldErrors.address && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.address}</p>}
+            </div>
 
             {error && <p style={{ color: '#ff6b6b', marginTop: '0.5rem', fontSize: '0.9rem', fontFamily: '"Cormorant SC",serif' }}>{error}</p>}
             

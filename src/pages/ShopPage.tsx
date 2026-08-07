@@ -1,8 +1,17 @@
+import { useState } from 'react';
 import ProductCard from '../components/ProductCard';
 import { useProducts } from '../lib/useProducts';
 
 export default function ShopPage() {
   const { products, loading } = useProducts();
+  const [sortBy, setSortBy] = useState('default');
+
+  const sortedProducts = [...products].sort((a, b) => {
+    if (sortBy === 'price-asc') return a.price - b.price;
+    if (sortBy === 'price-desc') return b.price - a.price;
+    // Default: could be chronological (by id or created_at if available), here we just use original order
+    return 0;
+  });
 
   return (
     <div style={{ minHeight: '100vh', background: '#000000', paddingTop: 130 }}>
@@ -23,10 +32,10 @@ export default function ShopPage() {
             </p>
             <div style={{ display:'flex', alignItems:'center', gap:'0.75rem' }}>
               <label style={{ fontFamily:'"Cormorant SC",serif', fontSize:'0.75rem', letterSpacing:'0.15em', color:'#000000', textTransform:'uppercase' }}>Sort by</label>
-              <select style={{ fontFamily:'"Cormorant Garamond",serif', fontSize:'0.9rem', color:'#000000', background:'transparent', border:'1px solid #000000', padding:'0.4rem 0.75rem', cursor:'pointer' }}>
-                <option>Default</option>
-                <option>Price: Low to High</option>
-                <option>Price: High to Low</option>
+              <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ fontFamily:'"Cormorant Garamond",serif', fontSize:'0.9rem', color:'#000000', background:'transparent', border:'1px solid #000000', padding:'0.4rem 0.75rem', cursor:'pointer' }}>
+                <option value="default">Default</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
               </select>
             </div>
           </div>
@@ -37,7 +46,7 @@ export default function ShopPage() {
             </div>
           ) : (
             <div className="product-grid">
-              {products.map((p, i) => <ProductCard key={p.id} product={p} priority={i===0} />)}
+              {sortedProducts.map((p, i) => <ProductCard key={p.id} product={p} priority={i===0} />)}
             </div>
           )}
         </div>
