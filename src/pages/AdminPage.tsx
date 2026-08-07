@@ -30,6 +30,7 @@ export default function AdminPage() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [orderToClear, setOrderToClear] = useState<string | null>(null);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   useEffect(() => { setLocalProducts(products); }, [products]);
 
@@ -57,8 +58,25 @@ export default function AdminPage() {
   if (!user || isAdmin === false) return <Navigate to="/" replace />;
 
   const onSaved = (updated: Product) => {
-    setLocalProducts(ps => ps.map(p => p.id === updated.id ? updated : p));
+    setLocalProducts(ps => {
+      const exists = ps.find(p => p.id === updated.id);
+      if (exists) return ps.map(p => p.id === updated.id ? updated : p);
+      return [updated, ...ps];
+    });
     setEditProduct(null);
+  };
+
+  const handleAddProduct = () => {
+    setEditProduct({
+      id: crypto.randomUUID(),
+      name: '',
+      price: 0,
+      description: '',
+      category: 'tops',
+      details: [],
+      inStock: true,
+      images: []
+    } as Product);
   };
 
   const updateOrderStatus = async (id: string, status: string) => {
@@ -76,6 +94,13 @@ export default function AdminPage() {
     await supabase.from('orders').delete().eq('id', orderToClear);
     setOrders(os => os.filter(o => o.id !== orderToClear));
     setOrderToClear(null);
+  };
+
+  const confirmDeleteProduct = async () => {
+    if (!productToDelete) return;
+    await supabase.from('products').delete().eq('id', productToDelete);
+    setLocalProducts(ps => ps.filter(p => p.id !== productToDelete));
+    setProductToDelete(null);
   };
 
   const tabStyle = (active: boolean): React.CSSProperties => ({
@@ -109,13 +134,29 @@ export default function AdminPage() {
           productsLoading ? (
             <p style={{ fontFamily: '"Cormorant SC",serif', letterSpacing: '0.2em', color: '#e5b876' }}>Loading products…</p>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: '1.25rem' }}>
+            <>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
+                <button onClick={handleAddProduct}
+                  style={{ background: '#e5b876', color: '#000000', border: 'none', fontFamily: '"Cormorant SC",serif', fontSize: '0.8rem', letterSpacing: '0.15em', textTransform: 'uppercase', padding: '0.6rem 1.25rem', cursor: 'pointer', borderRadius: 4, fontWeight: 'bold' }}>
+                  + New Product
+                </button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: '1.25rem' }}>
               {localProducts.map(p => (
                 <div key={p.id} onClick={() => setEditProduct(p)}
-                  style={{ background: '#111', border: '1px solid rgba(229,184,118,0.12)', borderRadius: 8, overflow: 'hidden', cursor: 'pointer', transition: 'border-color 0.3s ease, transform 0.2s ease' }}
+                  style={{ background: '#111', border: '1px solid rgba(229,184,118,0.12)', borderRadius: 8, overflow: 'hidden', cursor: 'pointer', transition: 'border-color 0.3s ease, transform 0.2s ease', position: 'relative' }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#e5b876'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(229,184,118,0.12)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}
                 >
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setProductToDelete(p.id); }}
+                    style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,107,107,0.5)', color: '#ff6b6b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, transition: 'all 0.2s' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#ff6b6b'; (e.currentTarget as HTMLElement).style.color = '#000'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,0,0,0.6)'; (e.currentTarget as HTMLElement).style.color = '#ff6b6b'; }}
+                    title="Delete Product"
+                  >
+                    ×
+                  </button>
                   <div style={{ aspectRatio: '3/4', overflow: 'hidden', background: '#1a1a1a' }}>
                     {p.images[0] && <img src={p.images[0]} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
                   </div>
@@ -129,6 +170,7 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
+          </>
           )
         )}
 
@@ -152,9 +194,9 @@ export default function AdminPage() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                       <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.2rem', color: '#ffffff', fontWeight: 700 }}>R{Number(o.total_amount || 0).toFixed(2)}</p>
-                      <select value={o.status} onChange={e => { e.stopPropagation(); updateOrderStatus(o.id, e.target.value); }}
+                      <select value={(o.status || '').toLowerCase()} onChange={e => { e.stopPropagation(); updateOrderStatus(o.id, e.target.value); }}
                         onClick={e => e.stopPropagation()}
-                        style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.7rem', letterSpacing: '0.1em', textTransform: 'uppercase', background: '#1a1a1a', border: '1px solid rgba(229,184,118,0.2)', color: statusColor(o.status), padding: '0.3rem 0.6rem', cursor: 'pointer', borderRadius: 4 }}>
+                        style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.7rem', letterSpacing: '0.1em', textTransform: 'uppercase', background: '#1a1a1a', border: '1px solid rgba(229,184,118,0.2)', color: statusColor((o.status || '').toLowerCase()), padding: '0.3rem 0.6rem', cursor: 'pointer', borderRadius: 4 }}>
                         {['pending','paid','fulfilled','cancelled'].map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
                     </div>
@@ -218,6 +260,37 @@ export default function AdminPage() {
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
                 Clear Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Product Deletion Modal */}
+      {productToDelete && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem' }}>
+          <div style={{ background: '#0a0a0a', border: '1px solid rgba(229,184,118,0.2)', borderRadius: 8, padding: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: 450, width: '100%', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', textAlign: 'center' }}>
+            <div style={{ width: 60, height: 60, borderRadius: '50%', border: '2px solid #ff6b6b', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+              </svg>
+            </div>
+            
+            <h3 style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.8rem', color: '#ff6b6b', marginBottom: '1rem' }}>Delete Product?</h3>
+            <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1rem', color: 'rgba(255,255,255,0.7)', marginBottom: '2.5rem', lineHeight: 1.5 }}>
+              Are you sure you want to completely remove this product? This action permanently deletes it from your store and cannot be undone.
+            </p>
+            
+            <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
+              <button onClick={() => setProductToDelete(null)} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '0.8rem', fontFamily: '"Cormorant SC",serif', fontSize: '0.9rem', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: 4, transition: 'all 0.2s' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                Cancel
+              </button>
+              <button onClick={confirmDeleteProduct} style={{ flex: 1, background: '#ff6b6b', border: 'none', color: '#000', padding: '0.8rem', fontFamily: '"Cormorant SC",serif', fontSize: '0.9rem', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: 4, transition: 'all 0.2s', fontWeight: 'bold' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
+                Delete Product
               </button>
             </div>
           </div>

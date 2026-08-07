@@ -43,10 +43,10 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // 1. Update order status to "Paid"
+    // 1. Update order status to "paid"
     const { data: order, error: updateError } = await supabase
       .from("orders")
-      .update({ status: "Paid" })
+      .update({ status: "paid" })
       .eq("id", orderId)
       .select()
       .single();

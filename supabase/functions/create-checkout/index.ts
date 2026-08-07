@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
       shipping_address: customer.address,
       items: items,
       total_amount: totalAmount,
-      status: "Pending",
+      status: "pending",
     }).select().single();
 
     if (dbError) {

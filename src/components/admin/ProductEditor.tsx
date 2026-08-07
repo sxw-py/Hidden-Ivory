@@ -41,7 +41,8 @@ export default function ProductEditor({ product, onSaved, onClose }: Props) {
   const save = async () => {
     setSaving(true);
     setMsg('');
-    const { error } = await supabase.from('products').update({
+    const { data, error } = await supabase.from('products').upsert({
+      id:          product.id,
       name:        form.name,
       price:       parseFloat(form.price),
       description: form.description,
@@ -50,13 +51,14 @@ export default function ProductEditor({ product, onSaved, onClose }: Props) {
       sizes:       form.sizes ? form.sizes.split(',').map(s => s.trim()).filter(Boolean) : null,
       in_stock:    form.inStock,
       images:      form.images,
-    }).eq('id', product.id);
+    }).select().single();
 
     setSaving(false);
     if (error) { setMsg('Error: ' + error.message); }
     else {
-      setMsg('Saved!');
-      onSaved({ ...product, ...form, price: parseFloat(form.price), details: form.details.split('\n').filter(Boolean), sizes: form.sizes ? form.sizes.split(',').map(s => s.trim()) : undefined, images: form.images });
+      setMsg(product.id === data.id ? 'Saved!' : 'Product created!');
+      const updatedProduct = { ...data, inStock: data.in_stock } as Product;
+      onSaved(updatedProduct);
       setTimeout(() => setMsg(''), 2000);
     }
   };
