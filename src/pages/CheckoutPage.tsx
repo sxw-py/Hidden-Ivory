@@ -7,14 +7,12 @@ import { supabase } from '../lib/supabase';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
-  const { items, clearCart } = useCart();
+  const { items } = useCart();
   const { products } = useProducts();
   const { user } = useAuth();
   
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showMockPayment, setShowMockPayment] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: user?.user_metadata?.full_name || '',
@@ -34,39 +32,12 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (items.length === 0 && !success) {
+    if (items.length === 0) {
       navigate('/shop', { replace: true });
     }
-  }, [items, navigate, success]);
+  }, [items, navigate]);
 
-  const handleSuccessfulPayment = async (tokenId: string) => {
-    try {
-      const { data, error: dbError } = await supabase.from('orders').insert({
-        user_id: user?.id || null, // Allow guest checkout if needed
-        customer_name: formData.fullName,
-        customer_email: formData.email,
-        customer_phone: formData.phone,
-        customer_id_number: formData.idNumber,
-        shipping_address: formData.address,
-        items: items, // JSONB
-        total_amount: grandTotal,
-        payment_token: tokenId,
-        status: 'Paid'
-      }).select().single();
-
-      if (dbError) throw dbError;
-
-      clearCart();
-      setShowMockPayment(false);
-      setSuccess(true);
-    } catch (err: any) {
-      setError(err.message || 'Failed to process order. Please contact support.');
-      setShowMockPayment(false);
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.fullName.trim() || !formData.email.trim() || !formData.phone.trim() || !formData.idNumber.trim() || !formData.address.trim()) {
@@ -96,25 +67,49 @@ export default function CheckoutPage() {
 
     setError(null);
     setLoading(true);
-    
-    // Simulate Opening the Payment Gateway Overlay
-    setShowMockPayment(true);
-    
-    // Simulate a successful payment after 3 seconds
-    setTimeout(() => {
-      handleSuccessfulPayment('tok_mock_payment_success_123');
-    }, 3000);
-  };
 
-  if (success) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#000000', paddingTop: 130, paddingBottom: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <h1 style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '3rem', color: '#e5b876', marginBottom: '1rem' }}>Thank You</h1>
-        <p style={{ color: '#ffffff', fontFamily: '"Cormorant Garamond",serif', fontSize: '1.2rem', marginBottom: '2rem' }}>Your order has been placed successfully.</p>
-        <button onClick={() => navigate('/shop')} className="btn-gold">Continue Shopping</button>
-      </div>
-    );
-  }
+    try {
+      // Call the Supabase Edge Function to create a Yoco checkout session
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      // Get the current user's session token if logged in
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseAnonKey,
+          ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({
+          customer: {
+            fullName: formData.fullName.trim(),
+            email: formData.email.trim(),
+            phone: cleanPhone,
+            idNumber: cleanId,
+            address: formData.address.trim(),
+          },
+          items: items,
+          totalAmount: grandTotal,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session');
+      }
+
+      // Redirect customer to Yoco's hosted payment page
+      window.location.href = data.redirectUrl;
+
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong. Please try again.');
+      setLoading(false);
+    }
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: '#000000', paddingTop: 130, paddingBottom: 100 }}>
@@ -145,7 +140,7 @@ export default function CheckoutPage() {
             <div style={{ height: 1, background: 'rgba(229,184,118,0.2)', margin: '1.5rem 0' }} />
             
             <button type="submit" disabled={loading} className="btn-gold" style={{ width: '100%', justifyContent: 'center' }}>
-              <span>{loading ? 'Processing...' : 'Checkout'}</span>
+              <span>{loading ? 'Redirecting to payment...' : 'Checkout'}</span>
             </button>
           </form>
         </div>
@@ -192,21 +187,6 @@ export default function CheckoutPage() {
         </div>
 
       </div>
-
-      {/* Mock Payment Overlay */}
-      {showMockPayment && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-          <div style={{ background: '#0a0a0a', border: '1px solid #e5b876', borderRadius: 8, padding: '3rem', display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: 400, width: '90%', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
-            <div style={{ width: 48, height: 48, borderRadius: '50%', border: '2px solid #e5b876', borderTopColor: 'transparent', animation: 'spin 1s linear infinite', marginBottom: '2rem' }} />
-            <style>{`
-              @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-            `}</style>
-            <h3 style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.5rem', color: '#ffffff', marginBottom: '0.5rem', textAlign: 'center' }}>Processing Payment</h3>
-            <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '1rem', color: 'rgba(255,255,255,0.7)', textAlign: 'center', marginBottom: '1.5rem' }}>Securely authenticating with your bank...</p>
-            <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '1.2rem', color: '#e5b876', fontWeight: 'bold' }}>R{grandTotal.toFixed(2)}</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
