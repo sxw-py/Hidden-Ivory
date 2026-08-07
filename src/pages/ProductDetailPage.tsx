@@ -3,13 +3,14 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import Carousel from '../components/Carousel';
 import ProductCard from '../components/ProductCard';
 import { useProduct, useProducts } from '../lib/useProducts';
+import { useCart } from '../contexts/CartContext';
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { product, loading: productLoading } = useProduct(id!);
   const { products } = useProducts();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [added, setAdded] = useState(false);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -25,8 +26,7 @@ export default function ProductDetailPage() {
 
   const handleAdd = () => {
     if (product.sizes && !selectedSize) return;
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2500);
+    addToCart(product.id, selectedSize || undefined);
   };
 
   const related = products.filter(p => p.id !== product.id).slice(0, 3);
@@ -55,10 +55,10 @@ export default function ProductDetailPage() {
         {/* Info */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
           <div>
-            <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.7rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#e5b876', marginBottom: '0.5rem' }}>{product.category}</p>
-            <h1 style={{ fontFamily: '"Cormorant Garamond",serif', fontWeight: 500, fontSize: 'clamp(1.8rem,4vw,2.5rem)', color: '#e5b876', lineHeight: 1.15, marginBottom: '0.75rem' }}>{product.name}</h1>
+            <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.85rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#e5b876', marginBottom: '0.5rem' }}>{product.category}</p>
+            <h1 style={{ fontFamily: '"Cormorant Garamond",serif', fontWeight: 500, fontSize: 'clamp(2rem,5vw,3rem)', color: '#e5b876', lineHeight: 1.15, marginBottom: '0.75rem' }}>{product.name}</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '1.4rem', color: '#e5b876', fontWeight: 500, letterSpacing: '0.05em' }}>R{product.price.toFixed(2)}</p>
+              <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '1.6rem', color: '#e5b876', fontWeight: 500, letterSpacing: '0.05em' }}>R{product.price.toFixed(2)}</p>
               {!product.inStock && (
                 <span style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.75rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#ff6b6b', border: '1px solid #ff6b6b', padding: '0.25rem 0.5rem', borderRadius: 4 }}>
                   Out of Stock
@@ -69,15 +69,15 @@ export default function ProductDetailPage() {
 
           <div style={{ height: 1, background: 'rgba(229,184,118,0.2)' }} />
 
-          <p style={{ color: '#ffffff', fontFamily: '"Cormorant Garamond",serif', fontSize: '1.05rem', lineHeight: 1.85 }}>{product.description}</p>
+          <p style={{ color: '#ffffff', fontFamily: '"Cormorant Garamond",serif', fontSize: '1.2rem', lineHeight: 1.85 }}>{product.description}</p>
 
           {/* Size selector */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <span style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.75rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#ffffff' }}>
+              <span style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.9rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#ffffff' }}>
                 Size{selectedSize ? `: ${selectedSize}` : ''}
               </span>
-              <span style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '0.85rem', color: '#e5b876', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'rgba(229,184,118,0.4)' }}>Size Guide</span>
+              <span style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1rem', color: '#e5b876', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'rgba(229,184,118,0.4)' }}>Size Guide</span>
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               {product.sizes ? product.sizes.map(s => (
@@ -86,12 +86,12 @@ export default function ProductDetailPage() {
                 <button disabled className="size-btn selected" style={{ width: 'auto', padding: '0 1rem', cursor: 'default' }}>ONE SIZE</button>
               )}
             </div>
-            {product.sizes && !selectedSize && <p style={{ marginTop: '0.5rem', fontFamily: '"Cormorant Garamond",serif', fontSize: '0.85rem', color: '#ffffff', fontStyle: 'italic' }}>Please select a size</p>}
+            {product.sizes && !selectedSize && <p style={{ marginTop: '0.5rem', fontFamily: '"Cormorant Garamond",serif', fontSize: '1.05rem', color: '#fffff0', fontStyle: 'italic' }}>Please select a size</p>}
           </div>
 
           <button onClick={handleAdd} className="btn-gold" style={{ width: '100%', justifyContent: 'center', opacity: !product.inStock ? 0.5 : 1, cursor: !product.inStock ? 'not-allowed' : 'pointer' }}
             disabled={!product.inStock || !!(product.sizes && !selectedSize)}>
-            <span>{!product.inStock ? 'Out of Stock' : added ? '✓ Added to Cart' : 'Add to Cart'}</span>
+            <span>{!product.inStock ? 'Out of Stock' : 'Add to Cart'}</span>
           </button>
 
           {/* Delivery box */}

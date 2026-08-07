@@ -234,3 +234,25 @@ body {
   width: 1px; height: 80px;
   background: linear-gradient(to bottom, transparent, #e5b876);
 }
+
+/* ─── Forms & Inputs ─────────────────────────────────────────── */
+.auth-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(229, 184, 118, 0.3);
+  color: #ffffff;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 6px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+.auth-input:focus {
+  border-color: #e5b876;
+  background: rgba(255, 255, 255, 0.06);
+}
+.auth-input::placeholder {
+  color: rgba(255, 255, 255, 0.65);
+  font-style: italic;
+}

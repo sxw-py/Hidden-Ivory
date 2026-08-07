@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
 import { supabase } from '../lib/supabase';
 
 function ToteBagIcon() {
@@ -36,6 +37,7 @@ export default function Header() {
   const [authMenuOpen, setAuthMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const { user, loading: authLoading, signInWithGoogleCredential, signOut } = useAuth();
+  const { items, openDrawer } = useCart();
   const authRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -65,15 +67,13 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const isScrolled = scrollY > 120;
-  const isSolid = scrollY > 380;
+  const isScrolled = scrollY > 50;
 
   const headerStyle: React.CSSProperties = {
     position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-    transition: 'background 0.5s ease, border-color 0.5s ease, backdrop-filter 0.5s ease',
-    background: isSolid ? 'rgba(0,0,0,0.96)' : isScrolled ? 'rgba(0,0,0,0.6)' : 'transparent',
-    backdropFilter: isScrolled ? 'blur(16px)' : 'none',
-    borderBottom: isSolid ? '1px solid rgba(229,184,118,0.15)' : '1px solid transparent',
+    transition: 'background 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease',
+    background: isScrolled ? '#000000' : 'transparent',
+    borderBottom: isScrolled ? '1px solid rgba(229,184,118,0.15)' : '1px solid transparent',
   };
 
   return (
@@ -171,11 +171,15 @@ export default function Header() {
               )}
             </div>
 
-            <button aria-label="Cart" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e5b876', padding: 4, display: 'flex', alignItems: 'center', position: 'relative', transition: 'color 0.3s ease' }}
+            <button aria-label="Cart" onClick={openDrawer} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e5b876', padding: 4, display: 'flex', alignItems: 'center', position: 'relative', transition: 'color 0.3s ease' }}
               onMouseEnter={e => (e.currentTarget.style.color = '#5e4018')}
               onMouseLeave={e => (e.currentTarget.style.color = '#e5b876')}>
               <ToteBagIcon />
-              <span style={{ position: 'absolute', top: -2, right: -4, width: 16, height: 16, background: '#5e4018', color: '#ffffff', borderRadius: '50%', fontSize: '0.6rem', fontFamily: '"Cormorant SC",serif', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>0</span>
+              {items.length > 0 && (
+                <span style={{ position: 'absolute', top: -2, right: -4, width: 16, height: 16, background: '#5e4018', color: '#ffffff', borderRadius: '50%', fontSize: '0.6rem', fontFamily: '"Cormorant SC",serif', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {items.reduce((sum, i) => sum + i.quantity, 0)}
+                </span>
+              )}
             </button>
 
             <button className="mobile-menu-btn" aria-label="Menu"

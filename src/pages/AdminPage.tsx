@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -8,14 +8,14 @@ import ProductEditor from '../components/admin/ProductEditor';
 
 interface Order {
   id: string;
-  order_number: string;
   customer_name: string;
   customer_email: string;
   customer_phone: string;
-  delivery_address: string;
+  customer_id_number: string;
+  shipping_address: string;
   status: string;
-  total_zar: number;
-  items: Array<{ name: string; quantity: number; size?: string; price: number }>;
+  total_amount: number;
+  items: Array<{ product_id: string; quantity: number; size?: string }>;
   created_at: string;
 }
 
@@ -133,12 +133,12 @@ export default function AdminPage() {
                   <div onClick={() => setExpandedOrder(expandedOrder === o.id ? null : o.id)}
                     style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', cursor: 'pointer' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                      <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.9rem', letterSpacing: '0.1em', color: '#e5b876' }}>{o.order_number}</p>
-                      <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '0.9rem', color: '#ffffff' }}>{o.customer_name} — {o.customer_email}</p>
-                      <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>{new Date(o.created_at).toLocaleDateString('en-ZA')}</p>
+                      <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.9rem', letterSpacing: '0.1em', color: '#e5b876' }}>ORD-{o.id.substring(0,8).toUpperCase()}</p>
+                      <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1rem', color: '#ffffff', fontWeight: 500 }}>{o.customer_name} — {o.customer_email}</p>
+                      <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)' }}>{new Date(o.created_at).toLocaleDateString('en-ZA')}</p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1rem', color: '#ffffff', fontWeight: 700 }}>R{o.total_zar.toFixed(2)}</p>
+                      <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.2rem', color: '#ffffff', fontWeight: 700 }}>R{Number(o.total_amount || 0).toFixed(2)}</p>
                       <select value={o.status} onChange={e => { e.stopPropagation(); updateOrderStatus(o.id, e.target.value); }}
                         onClick={e => e.stopPropagation()}
                         style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.7rem', letterSpacing: '0.1em', textTransform: 'uppercase', background: '#1a1a1a', border: '1px solid rgba(229,184,118,0.2)', color: statusColor(o.status), padding: '0.3rem 0.6rem', cursor: 'pointer', borderRadius: 4 }}>
@@ -152,20 +152,23 @@ export default function AdminPage() {
                     <div style={{ borderTop: '1px solid rgba(229,184,118,0.1)', padding: '1.25rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '1.5rem', background: '#0d0d0d' }}>
                       <div>
                         <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.65rem', letterSpacing: '0.15em', color: '#e5b876', marginBottom: '0.4rem' }}>Contact</p>
-                        <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '0.9rem', color: '#fff' }}>{o.customer_phone}</p>
-                        <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '0.9rem', color: '#fff' }}>{o.customer_email}</p>
+                        <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.05rem', color: '#fff' }}>{o.customer_phone}</p>
+                        <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.05rem', color: '#fff' }}>{o.customer_email}</p>
                       </div>
                       <div>
                         <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.65rem', letterSpacing: '0.15em', color: '#e5b876', marginBottom: '0.4rem' }}>Delivery Address</p>
-                        <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '0.9rem', color: '#fff', whiteSpace: 'pre-line' }}>{o.delivery_address}</p>
+                        <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.05rem', color: '#fff', whiteSpace: 'pre-line', lineHeight: '1.5' }}>{o.shipping_address}</p>
                       </div>
                       <div>
                         <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.65rem', letterSpacing: '0.15em', color: '#e5b876', marginBottom: '0.4rem' }}>Items</p>
-                        {Array.isArray(o.items) && o.items.map((item, i) => (
-                          <p key={i} style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '0.9rem', color: '#fff' }}>
-                            {item.quantity}× {item.name}{item.size ? ' (' + item.size + ')' : ''} — R{item.price}
-                          </p>
-                        ))}
+                        {Array.isArray(o.items) && o.items.map((item, i) => {
+                          const p = localProducts.find(prod => prod.id === item.product_id);
+                          return (
+                            <p key={i} style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.05rem', color: '#fff', marginBottom: '0.25rem' }}>
+                              {item.quantity}× {p ? p.name : 'Unknown Product'}{item.size ? ' (' + item.size + ')' : ''}
+                            </p>
+                          );
+                        })}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
                         <a href="https://dashboard.yoco.com" target="_blank" rel="noopener noreferrer"
