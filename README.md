@@ -2,7 +2,7 @@
 
 A premium, bespoke e-commerce platform built for a luxury streetwear brand. This full-stack web application delivers a seamless, high-end shopping experience, from product discovery to secure checkout.
 
-## 🚀 Key Features
+## Key Features
 
 *   **Luxury E-Commerce Experience:** A highly responsive, meticulously designed frontend featuring sleek micro-animations, a premium dark-mode aesthetic, and seamless cart state management.
 *   **Custom Admin Dashboard:** A secure, role-based admin panel allowing store owners to:
@@ -14,7 +14,7 @@ A premium, bespoke e-commerce platform built for a luxury streetwear brand. This
 *   **Automated Webhooks & Email Receipts:** Utilizing serverless edge functions to listen for Yoco payment webhooks, automatically update database order statuses, and trigger beautifully formatted email receipts via **Resend**.
 *   **Authentication & Security:** Robust user authentication (email/password & Google OAuth) with Row Level Security (RLS) ensuring that customer data is strictly protected.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 *   **Frontend:** React, TypeScript, Vite
 *   **Backend & Database:** Supabase (PostgreSQL, Edge Functions, Storage)
@@ -22,11 +22,11 @@ A premium, bespoke e-commerce platform built for a luxury streetwear brand. This
 *   **Email Infrastructure:** Resend API
 *   **Styling:** Custom CSS tailored for a bespoke, luxury aesthetic.
 
-## 💡 Architecture Highlights
+## Some of the underlying architecture
 
 *   **Edge Functions:** Serverless edge functions handle sensitive operations like initiating payment sessions and processing webhooks, ensuring API keys are never exposed to the client.
 *   **Real-time Form Validation:** Asynchronous, real-time validation during checkout prevents erroneous submissions and enhances user experience.
 *   **Optimized Asset Delivery:** All images (including user avatars and product photos) are served from optimized cloud buckets, with built-in robust fallbacks for missing assets.
 
 ---
-*Note: This repository represents the architectural and frontend implementation. Sensitive business logic, active client data, and proprietary assets have been omitted or generalized for confidentiality.*
+
