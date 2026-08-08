@@ -14,6 +14,10 @@ export default function Carousel({ images, alt }: CarouselProps) {
     return () => window.removeEventListener('keydown', onKey);
   }, [current]);
 
+  useEffect(() => {
+    setCurrent(0);
+  }, [images]);
+
 
 
   return (

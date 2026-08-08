@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     const { customer, items, totalAmount } = await req.json();
 
     // Validate required fields
-    if (!customer?.fullName || !customer?.email || !customer?.phone || !customer?.idNumber || !customer?.address) {
+    if (!customer?.fullName || !customer?.email || !customer?.phone || !customer?.address) {
       return new Response(JSON.stringify({ error: "Missing customer details" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
       customer_name: customer.fullName,
       customer_email: customer.email,
       customer_phone: customer.phone,
-      customer_id_number: customer.idNumber,
+      customer_id_number: "",
       shipping_address: customer.address,
       items: items,
       total_amount: totalAmount,

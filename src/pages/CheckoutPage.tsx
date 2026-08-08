@@ -19,8 +19,11 @@ export default function CheckoutPage() {
     fullName: user?.user_metadata?.full_name || '',
     email: user?.email || '',
     phone: '',
-    idNumber: '',
-    address: ''
+    street: '',
+    building: '',
+    suburb: '',
+    city: '',
+    postal: ''
   });
 
   const cartTotal = items.reduce((sum, item) => {
@@ -52,11 +55,28 @@ export default function CheckoutPage() {
         .maybeSingle();
         
       if (data) {
+        let building = '', street = '', suburb = '', city = '', postal = '';
+        if (data.shipping_address) {
+          const parts = data.shipping_address.split(',').map((s: string) => s.trim());
+          if (parts.length >= 4) {
+            postal = parts.pop() || '';
+            city = parts.pop() || '';
+            suburb = parts.pop() || '';
+            street = parts.pop() || '';
+            building = parts.join(', ') || ''; // If building existed, it's left in parts
+          } else {
+            street = data.shipping_address; // Fallback for old orders
+          }
+        }
+
         setFormData(prev => ({
           ...prev,
           phone: prev.phone || data.customer_phone || '',
-          idNumber: prev.idNumber || data.customer_id_number || '',
-          address: prev.address || data.shipping_address || '',
+          street: prev.street || street,
+          building: prev.building || building,
+          suburb: prev.suburb || suburb,
+          city: prev.city || city,
+          postal: prev.postal || postal,
         }));
       }
     };
@@ -73,9 +93,8 @@ export default function CheckoutPage() {
     } else if (name === 'phone') {
       const cleanPhone = value.replace(/[\s-]/g, '');
       if (!/^(\+27|0)[6-8][0-9]{8}$/.test(cleanPhone)) err = 'Please enter a valid South African phone number (e.g. 082 123 4567).';
-    } else if (name === 'idNumber') {
-      const cleanId = value.replace(/[\s-]/g, '');
-      if (!/^[0-9]{13}$/.test(cleanId)) err = 'Please enter a valid 13-digit South African ID number.';
+    } else if (['street', 'suburb', 'city', 'postal'].includes(name)) {
+      if (!value.trim()) err = 'This field is required.';
     }
     setFieldErrors(prev => ({ ...prev, [name]: err }));
     return !err;
@@ -87,10 +106,12 @@ export default function CheckoutPage() {
     const isFullNameValid = validateField('fullName', formData.fullName);
     const isEmailValid = validateField('email', formData.email);
     const isPhoneValid = validateField('phone', formData.phone);
-    const isIdValid = validateField('idNumber', formData.idNumber);
-    const isAddressValid = validateField('address', formData.address);
+    const isStreetValid = validateField('street', formData.street);
+    const isSuburbValid = validateField('suburb', formData.suburb);
+    const isCityValid = validateField('city', formData.city);
+    const isPostalValid = validateField('postal', formData.postal);
 
-    if (!isFullNameValid || !isEmailValid || !isPhoneValid || !isIdValid || !isAddressValid) {
+    if (!isFullNameValid || !isEmailValid || !isPhoneValid || !isStreetValid || !isSuburbValid || !isCityValid || !isPostalValid) {
       setError('Please fix the errors above before checking out.');
       return;
     }
@@ -118,8 +139,7 @@ export default function CheckoutPage() {
             fullName: formData.fullName.trim(),
             email: formData.email.trim(),
             phone: formData.phone.replace(/[\s-]/g, ''),
-            idNumber: formData.idNumber.replace(/[\s-]/g, ''),
-            address: formData.address.trim(),
+            address: [formData.building, formData.street, formData.suburb, formData.city, formData.postal].filter(Boolean).join(', '),
           },
           items: items,
           totalAmount: grandTotal,
@@ -174,20 +194,49 @@ export default function CheckoutPage() {
               {fieldErrors.phone && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.phone}</p>}
             </div>
             
-            <div>
-              <input type="text" placeholder="SA ID Number" required className="auth-input"
-                style={{ borderColor: fieldErrors.idNumber ? '#ff6b6b' : undefined, width: '100%', boxSizing: 'border-box' }}
-                value={formData.idNumber} onChange={e => { setFormData({...formData, idNumber: e.target.value}); setFieldErrors(prev => ({...prev, idNumber: ''})); }}
-                onBlur={() => validateField('idNumber', formData.idNumber)} />
-              {fieldErrors.idNumber && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.idNumber}</p>}
-            </div>
+
             
+            <div style={{ height: 1, background: 'rgba(229,184,118,0.2)', margin: '0.5rem 0' }} />
+            <h3 style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.4rem', color: '#e5b876', margin: 0 }}>Delivery Address</h3>
+
+            <div style={{ display: 'flex', gap: '1.25rem' }}>
+              <div style={{ flex: 1.2 }}>
+                <input type="text" placeholder="Street Name & Number" required className="auth-input"
+                  style={{ borderColor: fieldErrors.street ? '#ff6b6b' : undefined, width: '100%', boxSizing: 'border-box' }}
+                  value={formData.street} onChange={e => { setFormData({...formData, street: e.target.value}); setFieldErrors(prev => ({...prev, street: ''})); }}
+                  onBlur={() => validateField('street', formData.street)} />
+                {fieldErrors.street && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.street}</p>}
+              </div>
+              <div style={{ flex: 1 }}>
+                <input type="text" placeholder="Complex/Unit (Opt.)" className="auth-input"
+                  style={{ width: '100%', boxSizing: 'border-box', textOverflow: 'ellipsis' }}
+                  value={formData.building} onChange={e => { setFormData({...formData, building: e.target.value}); }} />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1.25rem' }}>
+              <div style={{ flex: 1 }}>
+                <input type="text" placeholder="Suburb" required className="auth-input"
+                  style={{ borderColor: fieldErrors.suburb ? '#ff6b6b' : undefined, width: '100%', boxSizing: 'border-box' }}
+                  value={formData.suburb} onChange={e => { setFormData({...formData, suburb: e.target.value}); setFieldErrors(prev => ({...prev, suburb: ''})); }}
+                  onBlur={() => validateField('suburb', formData.suburb)} />
+                {fieldErrors.suburb && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.suburb}</p>}
+              </div>
+              <div style={{ flex: 1 }}>
+                <input type="text" placeholder="City" required className="auth-input"
+                  style={{ borderColor: fieldErrors.city ? '#ff6b6b' : undefined, width: '100%', boxSizing: 'border-box' }}
+                  value={formData.city} onChange={e => { setFormData({...formData, city: e.target.value}); setFieldErrors(prev => ({...prev, city: ''})); }}
+                  onBlur={() => validateField('city', formData.city)} />
+                {fieldErrors.city && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.city}</p>}
+              </div>
+            </div>
+
             <div>
-              <textarea placeholder="Full Delivery Address" required className="auth-input" rows={4}
-                style={{ borderColor: fieldErrors.address ? '#ff6b6b' : undefined, width: '100%', boxSizing: 'border-box' }}
-                value={formData.address} onChange={e => { setFormData({...formData, address: e.target.value}); setFieldErrors(prev => ({...prev, address: ''})); }}
-                onBlur={() => validateField('address', formData.address)} />
-              {fieldErrors.address && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.address}</p>}
+              <input type="text" placeholder="Postal Code" required className="auth-input"
+                style={{ borderColor: fieldErrors.postal ? '#ff6b6b' : undefined, width: '100%', boxSizing: 'border-box' }}
+                value={formData.postal} onChange={e => { setFormData({...formData, postal: e.target.value}); setFieldErrors(prev => ({...prev, postal: ''})); }}
+                onBlur={() => validateField('postal', formData.postal)} />
+              {fieldErrors.postal && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.postal}</p>}
             </div>
 
             {error && <p style={{ color: '#ff6b6b', marginTop: '0.5rem', fontSize: '0.9rem', fontFamily: '"Cormorant SC",serif' }}>{error}</p>}
