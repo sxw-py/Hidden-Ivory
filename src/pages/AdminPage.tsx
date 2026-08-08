@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useProducts } from '../lib/useProducts';
 import type { Product } from '../lib/products';
 import ProductEditor from '../components/admin/ProductEditor';
+import ImageUploader from '../components/admin/ImageUploader';
 
 interface Order {
   id: string;
@@ -22,7 +23,7 @@ interface Order {
 export default function AdminPage() {
   const { user, loading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [tab, setTab] = useState<'products' | 'orders'>('products');
+  const [tab, setTab] = useState<'products' | 'orders' | 'settings'>('products');
   const { products, loading: productsLoading } = useProducts();
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [localProducts, setLocalProducts] = useState<Product[]>([]);
@@ -123,6 +124,7 @@ export default function AdminPage() {
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button style={tabStyle(tab === 'products')} onClick={() => setTab('products')}>Products</button>
             <button style={tabStyle(tab === 'orders')} onClick={() => setTab('orders')}>Orders</button>
+            <button style={tabStyle(tab === 'settings')} onClick={() => setTab('settings')}>Settings</button>
           </div>
         </div>
       </div>
@@ -232,6 +234,21 @@ export default function AdminPage() {
               ))}
             </div>
           )
+        )}
+
+        {/* -- Settings Tab -- */}
+        {tab === 'settings' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div style={{ background: '#111', border: '1px solid rgba(229,184,118,0.12)', borderRadius: 8, padding: '2rem' }}>
+              <h2 style={{ fontFamily: '"Cormorant SC",serif', fontSize: '1.2rem', letterSpacing: '0.15em', color: '#e5b876', textTransform: 'uppercase', marginBottom: '1rem' }}>Hero Image (Brand Story)</h2>
+              <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', marginBottom: '1.5rem', maxWidth: 600 }}>
+                Upload a new image to replace the signature shirt image on the home page. The site will automatically use the most recently uploaded image.
+              </p>
+              <div style={{ maxWidth: 300 }}>
+                <ImageUploader productId="hero" onUploaded={(url) => alert("Hero image successfully updated! The home page will now show this new image.")} />
+              </div>
+            </div>
+          </div>
         )}
       </div>
 

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import IntroOverlay from '../components/IntroOverlay';
 import ProductCard from '../components/ProductCard';
 import { useProducts } from '../lib/useProducts';
+import { supabase } from '../lib/supabase';
 
 function useReveal(deps: unknown[] = []) {
   useEffect(() => {
@@ -28,7 +29,18 @@ function useIsMobile() {
 export default function HomePage() {
   const isMobile = useIsMobile();
   const { products, loading } = useProducts();
+  const [heroImg, setHeroImg] = useState('/brand_story.png');
   useReveal([products]);
+
+  useEffect(() => {
+    supabase.storage.from('product-images').list('hero', { limit: 1, sortBy: { column: 'created_at', order: 'desc' } })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(`hero/${data[0].name}`);
+          setHeroImg(publicUrl);
+        }
+      });
+  }, []);
 
   return (
     <>
@@ -46,7 +58,7 @@ export default function HomePage() {
             </h1>
             
             <div className="reveal reveal-delay-1" style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-              <img src="/brand_story.png" alt="Hidden Ivory Signature Shirt" style={{ maxWidth: '85%', height: 'auto', borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }} />
+              <img src={heroImg} alt="Hidden Ivory Signature Shirt" style={{ maxWidth: '85%', height: 'auto', borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }} />
             </div>
 
             <Link to="/shop" className="btn-gold reveal reveal-delay-2" style={{ alignSelf: 'center', marginTop: '1rem' }}>
@@ -75,9 +87,9 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <div className="reveal reveal-delay-2" style={{ display: 'flex', justifyContent: 'center' }}>
-              <img src="/brand_story.png" alt="Hidden Ivory Signature Shirt" style={{ maxWidth: '100%', height: 'auto', borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }} />
-            </div>
+              <div className="reveal reveal-delay-1" style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                <img src={heroImg} alt="Hidden Ivory Signature Shirt" style={{ maxWidth: '100%', height: 'auto', borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }} />
+              </div>
           </div>
         )}
 

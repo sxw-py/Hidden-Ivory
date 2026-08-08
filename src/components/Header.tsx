@@ -112,7 +112,16 @@ export default function Header() {
                       onMouseLeave={e => (e.currentTarget.style.borderColor = '#e5b876')}
                     >
                       {user.user_metadata?.avatar_url ? (
-                        <img src={user.user_metadata.avatar_url} alt="avatar" width={32} height={32} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                        <img 
+                          src={user.user_metadata.avatar_url} 
+                          alt="avatar" 
+                          width={32} height={32} 
+                          style={{ borderRadius: '50%', objectFit: 'cover' }} 
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.user_metadata.full_name || user.email || 'User')}&background=1a1a1a&color=e5b876&size=64`;
+                          }}
+                        />
                       ) : (
                         <ProfileIcon />
                       )}
