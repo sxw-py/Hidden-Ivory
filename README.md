@@ -20,7 +20,7 @@ A premium, bespoke e-commerce platform built for a luxury streetwear brand. This
 *   **Backend & Database:** Supabase (PostgreSQL, Edge Functions, Storage)
 *   **Payment Processing:** Yoco API
 *   **Email Infrastructure:** Resend API
-*   **Styling:** Custom CSS tailored for a bespoke, luxury aesthetic.
+*   **Styling:** Tailwind CSS
 
 ## Some of the underlying architecture
 
