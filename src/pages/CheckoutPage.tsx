@@ -46,7 +46,7 @@ export default function CheckoutPage() {
     if (!user) return;
     
     const fetchLastOrder = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('orders')
         .select('*')
         .eq('user_id', user.id)

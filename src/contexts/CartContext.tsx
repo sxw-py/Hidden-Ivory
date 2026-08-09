@@ -1,6 +1,4 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { useAuth } from './AuthContext';
-import { supabase } from '../lib/supabase';
 
 export interface CartItem {
   id: string; // locally generated or DB uuid
@@ -31,7 +29,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return [];
   });
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { user } = useAuth();
 
   // Sync to local storage whenever items change
   useEffect(() => {

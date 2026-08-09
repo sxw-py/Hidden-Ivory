@@ -315,7 +315,7 @@ export default function AdminPage() {
                 Upload a new image to replace the signature shirt image on the home page. The site will automatically use the most recently uploaded image.
               </p>
               <div style={{ maxWidth: 300 }}>
-                <ImageUploader productId="hero" onUploaded={(url) => alert("Hero image successfully updated! The home page will now show this new image.")} />
+                <ImageUploader productId="hero" onUploaded={() => alert("Hero image successfully updated! The home page will now show this new image.")} />
               </div>
             </div>
           </div>
