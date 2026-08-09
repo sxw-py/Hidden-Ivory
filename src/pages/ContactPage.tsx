@@ -66,10 +66,10 @@ export default function ContactPage() {
               <WhatsAppIcon />
               <span>Contact Us on WhatsApp</span>
             </a>
-            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=support@hiddenivory.co.za" target="_blank" rel="noopener noreferrer" className="btn-outline">
+            <button onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })} className="btn-outline">
               <EmailIcon />
               <span>Contact Us via Email</span>
-            </a>
+            </button>
           </div>
         </div>
 
