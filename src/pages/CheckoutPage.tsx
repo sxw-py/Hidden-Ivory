@@ -199,36 +199,34 @@ export default function CheckoutPage() {
             <div style={{ height: 1, background: 'rgba(229,184,118,0.2)', margin: '0.5rem 0' }} />
             <h3 style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.4rem', color: '#e5b876', margin: 0 }}>Delivery Address</h3>
 
-            <div style={{ display: 'flex', gap: '1.25rem' }}>
-              <div style={{ flex: 1.2 }}>
-                <input type="text" placeholder="Street Name & Number" required className="auth-input"
-                  style={{ borderColor: fieldErrors.street ? '#ff6b6b' : undefined, width: '100%', boxSizing: 'border-box' }}
-                  value={formData.street} onChange={e => { setFormData({...formData, street: e.target.value}); setFieldErrors(prev => ({...prev, street: ''})); }}
-                  onBlur={() => validateField('street', formData.street)} />
-                {fieldErrors.street && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.street}</p>}
-              </div>
-              <div style={{ flex: 1 }}>
-                <input type="text" placeholder="Complex/Unit (Opt.)" className="auth-input"
-                  style={{ width: '100%', boxSizing: 'border-box', textOverflow: 'ellipsis' }}
-                  value={formData.building} onChange={e => { setFormData({...formData, building: e.target.value}); }} />
-              </div>
+            <div>
+              <input type="text" placeholder="Street Name & Number" required className="auth-input"
+                style={{ borderColor: fieldErrors.street ? '#ff6b6b' : undefined, width: '100%', boxSizing: 'border-box' }}
+                value={formData.street} onChange={e => { setFormData({...formData, street: e.target.value}); setFieldErrors(prev => ({...prev, street: ''})); }}
+                onBlur={() => validateField('street', formData.street)} />
+              {fieldErrors.street && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.street}</p>}
+            </div>
+            
+            <div>
+              <input type="text" placeholder="Complex/Unit (Opt.)" className="auth-input"
+                style={{ width: '100%', boxSizing: 'border-box', textOverflow: 'ellipsis' }}
+                value={formData.building} onChange={e => { setFormData({...formData, building: e.target.value}); }} />
             </div>
 
-            <div style={{ display: 'flex', gap: '1.25rem' }}>
-              <div style={{ flex: 1 }}>
-                <input type="text" placeholder="Suburb" required className="auth-input"
-                  style={{ borderColor: fieldErrors.suburb ? '#ff6b6b' : undefined, width: '100%', boxSizing: 'border-box' }}
-                  value={formData.suburb} onChange={e => { setFormData({...formData, suburb: e.target.value}); setFieldErrors(prev => ({...prev, suburb: ''})); }}
-                  onBlur={() => validateField('suburb', formData.suburb)} />
-                {fieldErrors.suburb && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.suburb}</p>}
-              </div>
-              <div style={{ flex: 1 }}>
-                <input type="text" placeholder="City" required className="auth-input"
-                  style={{ borderColor: fieldErrors.city ? '#ff6b6b' : undefined, width: '100%', boxSizing: 'border-box' }}
-                  value={formData.city} onChange={e => { setFormData({...formData, city: e.target.value}); setFieldErrors(prev => ({...prev, city: ''})); }}
-                  onBlur={() => validateField('city', formData.city)} />
-                {fieldErrors.city && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.city}</p>}
-              </div>
+            <div>
+              <input type="text" placeholder="Suburb" required className="auth-input"
+                style={{ borderColor: fieldErrors.suburb ? '#ff6b6b' : undefined, width: '100%', boxSizing: 'border-box' }}
+                value={formData.suburb} onChange={e => { setFormData({...formData, suburb: e.target.value}); setFieldErrors(prev => ({...prev, suburb: ''})); }}
+                onBlur={() => validateField('suburb', formData.suburb)} />
+              {fieldErrors.suburb && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.suburb}</p>}
+            </div>
+            
+            <div>
+              <input type="text" placeholder="City" required className="auth-input"
+                style={{ borderColor: fieldErrors.city ? '#ff6b6b' : undefined, width: '100%', boxSizing: 'border-box' }}
+                value={formData.city} onChange={e => { setFormData({...formData, city: e.target.value}); setFieldErrors(prev => ({...prev, city: ''})); }}
+                onBlur={() => validateField('city', formData.city)} />
+              {fieldErrors.city && <p style={{ color: '#ff6b6b', marginTop: '0.4rem', fontSize: '0.8rem', fontFamily: '"Cormorant SC",serif' }}>{fieldErrors.city}</p>}
             </div>
 
             <div>
