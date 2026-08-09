@@ -86,14 +86,24 @@ export default function AdminPage() {
       return;
     }
 
-    await supabase.from('orders').update({ status }).eq('id', id);
+    const { error } = await supabase.from('orders').update({ status }).eq('id', id);
+    if (error) {
+      alert("Failed to update order status. Please ensure you have the correct database permissions.");
+      console.error(error);
+      return;
+    }
     setOrders(os => os.map(o => o.id === id ? { ...o, status } : o));
   };
 
   const confirmClearOrder = async () => {
     if (!orderToClear) return;
-    await supabase.from('orders').delete().eq('id', orderToClear);
-    setOrders(os => os.filter(o => o.id !== orderToClear));
+    const { error } = await supabase.from('orders').delete().eq('id', orderToClear);
+    if (error) {
+      alert("Failed to delete order. Please ensure you have the correct database permissions.");
+      console.error(error);
+    } else {
+      setOrders(os => os.filter(o => o.id !== orderToClear));
+    }
     setOrderToClear(null);
   };
 
