@@ -32,6 +32,8 @@ export default function AdminPage() {
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [orderToClear, setOrderToClear] = useState<string | null>(null);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [selectedFeatured, setSelectedFeatured] = useState<string[]>([]);
+  const [savingFeatured, setSavingFeatured] = useState(false);
 
   useEffect(() => { setLocalProducts(products); }, [products]);
 
@@ -49,6 +51,13 @@ export default function AdminPage() {
     supabase.from('orders').select('*').order('created_at', { ascending: false })
       .then(({ data }) => { setOrders((data ?? []) as Order[]); setOrdersLoading(false); });
   }, [tab]);
+
+  // Load featured products when entering settings tab
+  useEffect(() => {
+    if (tab === 'settings') {
+      setSelectedFeatured(localProducts.filter(p => p.isFeatured).map(p => p.id));
+    }
+  }, [tab, localProducts]);
 
   if (authLoading || isAdmin === null) return (
     <div style={{ minHeight: '100vh', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -112,6 +121,23 @@ export default function AdminPage() {
     await supabase.from('products').delete().eq('id', productToDelete);
     setLocalProducts(ps => ps.filter(p => p.id !== productToDelete));
     setProductToDelete(null);
+  };
+
+  const handleSaveFeatured = async () => {
+    if (selectedFeatured.length !== 4) {
+      alert("Please select exactly 4 products.");
+      return;
+    }
+    setSavingFeatured(true);
+    for (const p of localProducts) {
+      const isFeat = selectedFeatured.includes(p.id);
+      if (p.isFeatured !== isFeat) {
+        await supabase.from('products').update({ is_featured: isFeat }).eq('id', p.id);
+      }
+    }
+    setLocalProducts(prev => prev.map(p => ({ ...p, isFeatured: selectedFeatured.includes(p.id) })));
+    alert("Featured products updated successfully!");
+    setSavingFeatured(false);
   };
 
   const tabStyle = (active: boolean): React.CSSProperties => ({
@@ -249,6 +275,40 @@ export default function AdminPage() {
         {/* -- Settings Tab -- */}
         {tab === 'settings' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div style={{ background: '#111', border: '1px solid rgba(229,184,118,0.12)', borderRadius: 8, padding: '2rem' }}>
+              <h2 style={{ fontFamily: '"Cormorant SC",serif', fontSize: '1.2rem', letterSpacing: '0.15em', color: '#e5b876', textTransform: 'uppercase', marginBottom: '1rem' }}>Featured Products (Homepage)</h2>
+              <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', marginBottom: '1.5rem', maxWidth: 600 }}>
+                Select exactly 4 products to display on the homepage. Currently selected: {selectedFeatured.length}/4
+              </p>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                {localProducts.map(p => {
+                  const isSelected = selectedFeatured.includes(p.id);
+                  return (
+                    <div key={p.id} 
+                         onClick={() => {
+                           if (isSelected) setSelectedFeatured(prev => prev.filter(id => id !== p.id));
+                           else if (selectedFeatured.length < 4) setSelectedFeatured(prev => [...prev, p.id]);
+                         }}
+                         style={{ background: isSelected ? 'rgba(229,184,118,0.15)' : '#1a1a1a', border: isSelected ? '2px solid #e5b876' : '1px solid rgba(229,184,118,0.2)', borderRadius: 8, padding: '1rem', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 4, overflow: 'hidden', background: '#000', flexShrink: 0 }}>
+                        {p.images[0] && <img src={p.images[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                      </div>
+                      <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.85rem', color: '#fff', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</p>
+                      <div style={{ width: 20, height: 20, borderRadius: '50%', border: isSelected ? '6px solid #e5b876' : '2px solid rgba(255,255,255,0.3)', flexShrink: 0 }} />
+                    </div>
+                  );
+                })}
+              </div>
+
+              <button 
+                onClick={handleSaveFeatured}
+                disabled={selectedFeatured.length !== 4 || savingFeatured}
+                style={{ background: selectedFeatured.length === 4 ? '#e5b876' : '#333', color: selectedFeatured.length === 4 ? '#000' : '#888', border: 'none', fontFamily: '"Cormorant SC",serif', fontSize: '0.8rem', letterSpacing: '0.15em', textTransform: 'uppercase', padding: '0.8rem 1.5rem', cursor: selectedFeatured.length === 4 ? 'pointer' : 'not-allowed', borderRadius: 4, fontWeight: 'bold' }}>
+                {savingFeatured ? 'Saving...' : 'Save Featured Products'}
+              </button>
+            </div>
+
             <div style={{ background: '#111', border: '1px solid rgba(229,184,118,0.12)', borderRadius: 8, padding: '2rem' }}>
               <h2 style={{ fontFamily: '"Cormorant SC",serif', fontSize: '1.2rem', letterSpacing: '0.15em', color: '#e5b876', textTransform: 'uppercase', marginBottom: '1rem' }}>Hero Image (Brand Story)</h2>
               <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', marginBottom: '1.5rem', maxWidth: 600 }}>

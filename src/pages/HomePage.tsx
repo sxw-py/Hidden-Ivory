@@ -109,7 +109,7 @@ export default function HomePage() {
             <div style={{ textAlign:'center', padding:'3rem', fontFamily:'"Cormorant SC",serif', fontSize:'0.85rem', letterSpacing:'0.2em', color:'#000000' }}>Loading…</div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'clamp(0.75rem, 3vw, 1.5rem)' }}>
-              {products.slice(0, 4).map((p, i) => (
+              {(products.filter(p => p.isFeatured).length === 4 ? products.filter(p => p.isFeatured) : products.slice(0, 4)).map((p, i) => (
                 <div key={p.id} className={`reveal reveal-delay-${Math.min(i + 1, 4)}`}>
                   <ProductCard product={p} priority={i === 0} />
                 </div>

@@ -14,6 +14,7 @@ function mapRow(row: Record<string, unknown>): Product {
     category:    row.category as string,
     sizes:       (row.sizes as string[] | null) ?? undefined,
     inStock:     row.in_stock as boolean,
+    isFeatured:  (row.is_featured as boolean) ?? false,
   };
 }
 

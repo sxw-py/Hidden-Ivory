@@ -8,6 +8,7 @@ export interface Product {
   category: string;
   sizes?: string[];
   inStock: boolean;
+  isFeatured?: boolean;
 }
 
 export const products: Product[] = [
