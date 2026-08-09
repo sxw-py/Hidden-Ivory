@@ -78,7 +78,6 @@ export default function ProductDetailPage() {
               <span style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.9rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#000000', fontWeight: 600 }}>
                 Size{selectedSize ? `: ${selectedSize}` : ''}
               </span>
-              <span style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1rem', color: '#000000', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'rgba(0,0,0,0.4)', fontWeight: 600 }}>Size Guide</span>
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               {product.sizes ? product.sizes.map(s => (
