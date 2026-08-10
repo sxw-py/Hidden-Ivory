@@ -65,10 +65,10 @@ export default function Footer() {
         <div>
           <p className="section-eyebrow" style={{ marginBottom: '1.25rem' }}>Get in Touch</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', color: '#ffffff', fontFamily: '"Cormorant Garamond",serif', fontSize: '0.95rem' }}>
-            <a href="mailto:support@hiddenivory.co.za" style={{ color: '#ffffff', textDecoration: 'none', transition: 'color 0.3s ease' }}
-              onMouseEnter={e => ((e.target as HTMLElement).style.color = '#5e4018')}
-              onMouseLeave={e => ((e.target as HTMLElement).style.color = '#ffffff')}>
-              support@hiddenivory.co.za
+            <a href="mailto:support@hiddenivory.com" style={{ color: '#ffffff', textDecoration: 'none', transition: 'color 0.3s ease' }}
+               onMouseOver={(e) => e.currentTarget.style.color = '#e5b876'}
+               onMouseOut={(e) => e.currentTarget.style.color = '#ffffff'}>
+              support@hiddenivory.com
             </a>
             <span>South Africa</span>
           </div>
