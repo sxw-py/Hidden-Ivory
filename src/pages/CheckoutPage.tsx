@@ -11,6 +11,14 @@ export default function CheckoutPage() {
   const { products } = useProducts();
   const { user } = useAuth();
   
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    if (user?.email) {
+      supabase.from('admin_users').select('is_admin').eq('email', user.email).maybeSingle()
+        .then(({ data }) => setIsAdmin(!!data?.is_admin));
+    }
+  }, [user]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -31,7 +39,7 @@ export default function CheckoutPage() {
     return sum + (p ? p.price * item.quantity : 0);
   }, 0);
 
-  const SHIPPING_COST = 100;
+  const SHIPPING_COST = isAdmin ? 0 : 100;
   const grandTotal = cartTotal > 0 ? cartTotal + SHIPPING_COST : 0;
 
   useEffect(() => {
