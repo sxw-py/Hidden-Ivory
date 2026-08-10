@@ -23,7 +23,7 @@ export default function Footer() {
             <img src="/Logo.png" alt="Hidden Ivory" width={120} height={120} style={{ borderRadius: 2 }} />
           </Link>
           <p style={{ color: '#ffffff', fontSize: '0.9rem', lineHeight: 1.8, fontFamily: '"Cormorant Garamond",serif', maxWidth: 260 }}>
-            Bold luxury rooted in African identity. Every stitch tells the story.
+            Identity lives within the stitch
           </p>
           <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
             {[{ href: 'https://instagram.com/hiddenivory', label: 'Instagram', Icon: InstagramIcon }, { href: 'https://facebook.com/hiddenivory', label: 'Facebook', Icon: FacebookIcon }].map(({ href, label, Icon }) => (
