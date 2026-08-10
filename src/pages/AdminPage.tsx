@@ -23,7 +23,7 @@ interface Order {
 export default function AdminPage() {
   const { user, loading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [tab, setTab] = useState<'products' | 'orders' | 'settings'>('products');
+  const [tab, setTab] = useState<'products' | 'orders' | 'completed_orders' | 'settings'>('products');
   const { products, loading: productsLoading } = useProducts();
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [localProducts, setLocalProducts] = useState<Product[]>([]);
@@ -44,9 +44,9 @@ export default function AdminPage() {
       .then(({ data }) => setIsAdmin(!!data?.is_admin));
   }, [user]);
 
-  // Load orders when on orders tab
+  // Load orders when on orders or completed_orders tab
   useEffect(() => {
-    if (tab !== 'orders') return;
+    if (tab !== 'orders' && tab !== 'completed_orders') return;
     setOrdersLoading(true);
     supabase.from('orders').select('*').order('created_at', { ascending: false })
       .then(({ data }) => { setOrders((data ?? []) as Order[]); setOrdersLoading(false); });
@@ -106,12 +106,12 @@ export default function AdminPage() {
 
   const confirmClearOrder = async () => {
     if (!orderToClear) return;
-    const { error } = await supabase.from('orders').delete().eq('id', orderToClear);
+    const { error } = await supabase.from('orders').update({ status: 'completed' }).eq('id', orderToClear);
     if (error) {
-      alert("Failed to delete order. Please ensure you have the correct database permissions.");
+      alert("Failed to archive order. Please ensure you have the correct database permissions.");
       console.error(error);
     } else {
-      setOrders(os => os.filter(o => o.id !== orderToClear));
+      setOrders(os => os.map(o => o.id === orderToClear ? { ...o, status: 'completed' } : o));
     }
     setOrderToClear(null);
   };
@@ -157,9 +157,10 @@ export default function AdminPage() {
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.7rem', letterSpacing: '0.3em', color: '#e5b876', marginBottom: '0.5rem' }}>Hidden Ivory</p>
           <h1 style={{ fontFamily: '"Cormorant SC",serif', fontSize: 'clamp(1.5rem,4vw,2.5rem)', color: '#ffffff', marginBottom: '1.5rem' }}>Admin Dashboard</h1>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             <button style={tabStyle(tab === 'products')} onClick={() => setTab('products')}>Products</button>
-            <button style={tabStyle(tab === 'orders')} onClick={() => setTab('orders')}>Orders</button>
+            <button style={tabStyle(tab === 'orders')} onClick={() => setTab('orders')}>Active Orders</button>
+            <button style={tabStyle(tab === 'completed_orders')} onClick={() => setTab('completed_orders')}>Completed</button>
             <button style={tabStyle(tab === 'settings')} onClick={() => setTab('settings')}>Settings</button>
           </div>
         </div>
@@ -216,11 +217,11 @@ export default function AdminPage() {
         {tab === 'orders' && (
           ordersLoading ? (
             <p style={{ fontFamily: '"Cormorant SC",serif', letterSpacing: '0.2em', color: '#e5b876' }}>Loading orders…</p>
-          ) : orders.length === 0 ? (
-            <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.5)' }}>No orders yet.</p>
+          ) : orders.filter(o => o.status !== 'completed').length === 0 ? (
+            <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.5)' }}>No active orders.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {orders.map(o => (
+              {orders.filter(o => o.status !== 'completed').map(o => (
                 <div key={o.id} style={{ background: '#111', border: '1px solid rgba(229,184,118,0.12)', borderRadius: 8, overflow: 'hidden' }}>
                   {/* Order row */}
                   <div onClick={() => setExpandedOrder(expandedOrder === o.id ? null : o.id)}
@@ -235,7 +236,67 @@ export default function AdminPage() {
                       <select value={(o.status || '').toLowerCase()} onChange={e => { e.stopPropagation(); updateOrderStatus(o.id, e.target.value); }}
                         onClick={e => e.stopPropagation()}
                         style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.7rem', letterSpacing: '0.1em', textTransform: 'uppercase', background: '#1a1a1a', border: '1px solid rgba(229,184,118,0.2)', color: statusColor((o.status || '').toLowerCase()), padding: '0.3rem 0.6rem', cursor: 'pointer', borderRadius: 4 }}>
-                        {['pending','paid','fulfilled','cancelled'].map(s => <option key={s} value={s}>{s}</option>)}
+                        {['pending','paid','fulfilled','cancelled','completed'].map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Expanded detail */}
+                  {expandedOrder === o.id && (
+                    <div style={{ borderTop: '1px solid rgba(229,184,118,0.1)', padding: '1.25rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '1.5rem', background: '#0d0d0d' }}>
+                      <div>
+                        <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.65rem', letterSpacing: '0.15em', color: '#e5b876', marginBottom: '0.4rem' }}>Contact</p>
+                        <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.05rem', color: '#fff' }}>{o.customer_phone}</p>
+                        <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.05rem', color: '#fff' }}>{o.customer_email}</p>
+                      </div>
+                      <div>
+                        <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.65rem', letterSpacing: '0.15em', color: '#e5b876', marginBottom: '0.4rem' }}>Delivery Address</p>
+                        <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.05rem', color: '#fff', whiteSpace: 'pre-line', lineHeight: '1.5' }}>{o.shipping_address}</p>
+                      </div>
+                      <div>
+                        <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.65rem', letterSpacing: '0.15em', color: '#e5b876', marginBottom: '0.4rem' }}>Items</p>
+                        {Array.isArray(o.items) && o.items.map((item, i) => {
+                          const p = localProducts.find(prod => prod.id === item.product_id);
+                          return (
+                            <p key={i} style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.05rem', color: '#fff', marginBottom: '0.25rem' }}>
+                              {item.quantity}× {p ? p.name : 'Unknown Product'}{item.size ? ' (' + item.size + ')' : ''}
+                            </p>
+                          );
+                        })}
+                      </div>
+
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
+        {/* -- Completed Orders Tab -- */}
+        {tab === 'completed_orders' && (
+          ordersLoading ? (
+            <p style={{ fontFamily: '"Cormorant SC",serif', letterSpacing: '0.2em', color: '#e5b876' }}>Loading completed orders…</p>
+          ) : orders.filter(o => o.status === 'completed').length === 0 ? (
+            <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.5)' }}>No completed orders.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {orders.filter(o => o.status === 'completed').map(o => (
+                <div key={o.id} style={{ background: '#111', border: '1px solid rgba(229,184,118,0.12)', borderRadius: 8, overflow: 'hidden', opacity: 0.8 }}>
+                  {/* Order row */}
+                  <div onClick={() => setExpandedOrder(expandedOrder === o.id ? null : o.id)}
+                    style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', cursor: 'pointer' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                      <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.9rem', letterSpacing: '0.1em', color: '#e5b876' }}>ORD-{o.id.substring(0,8).toUpperCase()}</p>
+                      <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1rem', color: '#ffffff', fontWeight: 500 }}>{o.customer_name} — {o.customer_email}</p>
+                      <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)' }}>{new Date(o.created_at).toLocaleDateString('en-ZA')}</p>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.2rem', color: '#ffffff', fontWeight: 700 }}>R{Number(o.total_amount || 0).toFixed(2)}</p>
+                      <select value={(o.status || '').toLowerCase()} onChange={e => { e.stopPropagation(); updateOrderStatus(o.id, e.target.value); }}
+                        onClick={e => e.stopPropagation()}
+                        style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.7rem', letterSpacing: '0.1em', textTransform: 'uppercase', background: '#1a1a1a', border: '1px solid rgba(229,184,118,0.2)', color: statusColor((o.status || '').toLowerCase()), padding: '0.3rem 0.6rem', cursor: 'pointer', borderRadius: 4 }}>
+                        {['pending','paid','fulfilled','cancelled','completed'].map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
                     </div>
                   </div>
