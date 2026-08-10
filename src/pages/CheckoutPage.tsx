@@ -13,8 +13,8 @@ export default function CheckoutPage() {
   
   const [isAdmin, setIsAdmin] = useState(false);
   useEffect(() => {
-    if (user?.email) {
-      supabase.from('admin_users').select('is_admin').eq('email', user.email).maybeSingle()
+    if (user) {
+      supabase.from('profiles').select('is_admin').eq('id', user.id).single()
         .then(({ data }) => setIsAdmin(!!data?.is_admin));
     }
   }, [user]);
