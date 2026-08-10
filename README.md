@@ -1,32 +1,27 @@
-# Hidden Ivory
+# Hidden Ivory 
 
-A premium, bespoke e-commerce platform built for a luxury streetwear brand. This full-stack web application delivers a seamless, high-end shopping experience, from product discovery to secure checkout.
+Welcome to the repo for **Hidden Ivory**—a premium, luxury streetwear brand built from the ground up.
 
-## Key Features
+## How it's hosted
 
-*   **Luxury E-Commerce Experience:** A highly responsive, meticulously designed frontend featuring sleek micro-animations, a premium dark-mode aesthetic, and seamless cart state management.
-*   **Custom Admin Dashboard:** A secure, role-based admin panel allowing store owners to:
-    *   Manage inventory dynamically (Create, Update, Delete products).
-    *   Upload and manage product imagery directly to cloud storage.
-    *   Track and fulfill customer orders efficiently.
-    *   Dynamically update site assets (like the Hero image) without code deployments.
-*   **Secure Payment Gateway Integration:** Fully integrated with the **Yoco API** for secure, PCI-compliant payment processing.
-*   **Automated Webhooks & Email Receipts:** Utilizing serverless edge functions to listen for Yoco payment webhooks, automatically update database order statuses, and trigger beautifully formatted email receipts via **Resend**.
-*   **Authentication & Security:** Robust user authentication (email/password & Google OAuth) with Row Level Security (RLS) ensuring that customer data is strictly protected.
+- **Frontend Hosting:** Vercel (for that instant, edge-network speed and automated CI/CD).
+- **Backend & Database:** Supabase (PostgreSQL database, Serverless Edge Functions, and Storage).
+- **DNS & Domain:** Hostinger.
+- **Frontend Framework:** Vite + React (TypeScript) with pure, hand-written CSS for absolute design freedom.
 
-## Tech Stack
+##  Key Features & Integrations
 
-*   **Frontend:** React, TypeScript, Vite
-*   **Backend & Database:** Supabase (PostgreSQL, Edge Functions, Storage)
-*   **Payment Processing:** Yoco API
-*   **Email Infrastructure:** Resend API
-*   **Styling:** Tailwind CSS
+### 1. The Modular Admin Panel
+I built a completely custom, highly modular Admin Panel from scratch. Instead of relying on a clunky third-party CMS, I manage the entire store directly from a secure route on the site. I can instantly add products, upload high-res images (which stream securely to Supabase Storage buckets), toggle inventory sizes. It's built to be completely dynamic—if I want to drop a new collection tomorrow, the admin panel handles it flawlessly without me having to touch a single line of code.
 
-## Some of the underlying architecture
+### 2. Yoco Payment Webhooks
+Payments are fully integrated using **Yoco's API**. But I didn't just plug in a checkout button; I built a robust, serverless backend. When a customer pays, Yoco fires a secure Webhook to my Supabase Edge Function in the background. The server verifies the cryptographic signature (to prevent spoofing), updates the PostgreSQL database, and processes the order entirely behind the scenes. 
 
-*   **Edge Functions:** Serverless edge functions handle sensitive operations like initiating payment sessions and processing webhooks, ensuring API keys are never exposed to the client.
-*   **Real-time Form Validation:** Asynchronous, real-time validation during checkout prevents erroneous submissions and enhances user experience.
-*   **Optimized Asset Delivery:** All images (including user avatars and product photos) are served from optimized cloud buckets, with built-in robust fallbacks for missing assets.
+### 3. Automated Resend Emails
+The moment a payment clears, the backend automatically triggers **Resend's API** to fire off a custom-designed, fully responsive HTML receipt directly to the customer's inbox. 
+
+### 4. Seamless Google Auth
+I integrated **Google OAuth** (via Google Cloud & Supabase Auth) so users can sign in with one tap. The system is also designed to handle full guest checkouts seamlessly, tying their guest email to their order history automatically.
 
 ---
-
+Live Link: https://www.hiddenivory.com/
