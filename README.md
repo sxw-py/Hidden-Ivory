@@ -4,10 +4,10 @@ Welcome to the repo for **Hidden Ivory**—a premium, luxury streetwear brand bu
 
 ## How it's hosted
 
-- **Frontend Hosting:** Vercel (for that instant, edge-network speed and automated CI/CD).
+- **Frontend Hosting:** Vercel 
 - **Backend & Database:** Supabase (PostgreSQL database, Serverless Edge Functions, and Storage).
 - **DNS & Domain:** Hostinger.
-- **Frontend Framework:** Vite + React (TypeScript) with pure, hand-written CSS for absolute design freedom.
+- **Frontend Framework:** Vite + React (TypeScript) and Tailwind CSS
 
 ##  Key Features & Integrations
 
