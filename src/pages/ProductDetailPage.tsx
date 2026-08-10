@@ -59,7 +59,7 @@ export default function ProductDetailPage() {
             <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.85rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#ffffff', marginBottom: '0.5rem', fontWeight: 'bold' }}>{product.category}</p>
             <h1 style={{ fontFamily: '"Cormorant Garamond",serif', fontWeight: 'bold', fontSize: 'clamp(2rem,5vw,3rem)', color: '#ffffff', lineHeight: 1.15, marginBottom: '0.75rem', textShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>{product.name}</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '1.6rem', color: '#000000', fontWeight: 600, letterSpacing: '0.05em' }}>R{product.price.toFixed(2)}</p>
+              <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '1.6rem', color: '#000000', fontWeight: 600, letterSpacing: '0.05em' }}>R{product.price.toLocaleString('en-US')}</p>
               {!product.inStock && (
                 <span style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.75rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#000000', border: '1px solid #000000', padding: '0.25rem 0.5rem', borderRadius: 4 }}>
                   Out of Stock

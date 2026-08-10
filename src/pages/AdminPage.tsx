@@ -201,7 +201,7 @@ export default function AdminPage() {
                   </div>
                   <div style={{ padding: '0.75rem' }}>
                     <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.75rem', letterSpacing: '0.1em', color: '#ffffff', marginBottom: '0.25rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</p>
-                    <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '0.9rem', color: '#e5b876', fontWeight: 700 }}>R{p.price.toFixed(2)}</p>
+                    <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '0.9rem', color: '#e5b876', fontWeight: 700 }}>R{p.price.toLocaleString('en-US')}</p>
                     <span style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.65rem', letterSpacing: '0.1em', color: p.inStock ? '#4caf82' : '#ff6b6b', textTransform: 'uppercase' }}>
                       {p.inStock ? 'In Stock' : 'Out of Stock'}
                     </span>
@@ -232,7 +232,7 @@ export default function AdminPage() {
                       <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)' }}>{new Date(o.created_at).toLocaleDateString('en-ZA')}</p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.2rem', color: '#ffffff', fontWeight: 700 }}>R{Number(o.total_amount || 0).toFixed(2)}</p>
+                      <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.2rem', color: '#ffffff', fontWeight: 700 }}>R{Number(o.total_amount || 0).toLocaleString('en-US')}</p>
                       <select value={(o.status || '').toLowerCase()} onChange={e => { e.stopPropagation(); updateOrderStatus(o.id, e.target.value); }}
                         onClick={e => e.stopPropagation()}
                         style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.7rem', letterSpacing: '0.1em', textTransform: 'uppercase', background: '#1a1a1a', border: '1px solid rgba(229,184,118,0.2)', color: statusColor((o.status || '').toLowerCase()), padding: '0.3rem 0.6rem', cursor: 'pointer', borderRadius: 4 }}>
@@ -292,7 +292,7 @@ export default function AdminPage() {
                       <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)' }}>{new Date(o.created_at).toLocaleDateString('en-ZA')}</p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.2rem', color: '#ffffff', fontWeight: 700 }}>R{Number(o.total_amount || 0).toFixed(2)}</p>
+                      <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.2rem', color: '#ffffff', fontWeight: 700 }}>R{Number(o.total_amount || 0).toLocaleString('en-US')}</p>
                       <select value={(o.status || '').toLowerCase()} onChange={e => { e.stopPropagation(); updateOrderStatus(o.id, e.target.value); }}
                         onClick={e => e.stopPropagation()}
                         style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.7rem', letterSpacing: '0.1em', textTransform: 'uppercase', background: '#1a1a1a', border: '1px solid rgba(229,184,118,0.2)', color: statusColor((o.status || '').toLowerCase()), padding: '0.3rem 0.6rem', cursor: 'pointer', borderRadius: 4 }}>

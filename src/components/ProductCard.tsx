@@ -12,7 +12,7 @@ export default function ProductCard({ product, priority = false }: { product: Pr
       <div className="card-gold-bar" />
       <div className="card-info">
         <p className="card-name">{product.name}</p>
-        <p className="card-price">R{product.price.toFixed(2)}</p>
+        <p className="card-price">R{product.price.toLocaleString('en-US')}</p>
       </div>
     </Link>
   );

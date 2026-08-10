@@ -263,7 +263,7 @@ export default function CheckoutPage() {
                     {item.size && <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', margin: 0 }}>Size: {item.size}</p>}
                     <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', margin: 0 }}>Qty: {item.quantity}</p>
                   </div>
-                  <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '1.1rem', color: '#e5b876' }}>R{(p.price * item.quantity).toFixed(2)}</p>
+                  <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '1.1rem', color: '#e5b876' }}>R{(p.price * item.quantity).toLocaleString('en-US')}</p>
                 </div>
               );
             })}
@@ -273,18 +273,18 @@ export default function CheckoutPage() {
           
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', color: '#ffffff', fontFamily: '"Cormorant Garamond",serif', fontSize: '1.2rem' }}>
             <span>Subtotal</span>
-            <span>R{cartTotal.toFixed(2)}</span>
+            <span>R{cartTotal.toLocaleString('en-US')}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', color: '#ffffff', fontFamily: '"Cormorant Garamond",serif', fontSize: '1.2rem' }}>
             <span>Shipping</span>
-            <span>R{SHIPPING_COST.toFixed(2)}</span>
+            <span>R{SHIPPING_COST.toLocaleString('en-US')}</span>
           </div>
           
           <div style={{ height: 1, background: 'rgba(229,184,118,0.2)', marginBottom: '1.5rem' }} />
           
           <div style={{ display: 'flex', justifyContent: 'space-between', color: '#e5b876', fontFamily: '"Cormorant SC",serif', fontSize: '1.8rem', fontWeight: 600 }}>
             <span>Total</span>
-            <span>R{grandTotal.toFixed(2)}</span>
+            <span>R{grandTotal.toLocaleString('en-US')}</span>
           </div>
         </div>
 

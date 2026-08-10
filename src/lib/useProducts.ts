@@ -23,7 +23,8 @@ export function useProducts() {
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchProducts = () => {
+    setLoading(true);
     supabase.from('products').select('*')
       .then(
         ({ data, error }) => {
@@ -36,9 +37,13 @@ export function useProducts() {
         },
         () => setLoading(false)
       );
+  };
+
+  useEffect(() => {
+    fetchProducts();
   }, []);
 
-  return { products, loading, error };
+  return { products, loading, error, refresh: fetchProducts };
 }
 
 export function useProduct(id: string) {
