@@ -62,7 +62,7 @@ export default function ContactPage() {
           </p>
 
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <a href="https://wa.me/27715079677" target="_blank" rel="noopener noreferrer" className="btn-whatsapp">
+            <a href="https://wa.me/27827439898" target="_blank" rel="noopener noreferrer" className="btn-whatsapp">
               <WhatsAppIcon />
               <span>Contact Us on WhatsApp</span>
             </a>
