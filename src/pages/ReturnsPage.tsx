@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 
-const WA_NUMBER = '2700000000';
-const WA_MSG = encodeURIComponent("Hi Hidden Ivory. I'd like to initiate a return. My order details are:");
+const WA_NUMBER = '27827439898';
+const WA_MSG = encodeURIComponent("Hi Hidden Ivory! I'd like to initiate a return. My order details are: (Please fill in your order details below)");
 const WA_URL = `https://wa.me/${WA_NUMBER}?text=${WA_MSG}`;
 
 const policies = [

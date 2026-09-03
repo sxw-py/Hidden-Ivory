@@ -12,7 +12,7 @@ function useReveal(deps: unknown[] = []) {
     }, { threshold: 0.12 });
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
     return () => observer.disconnect();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }
 
@@ -56,7 +56,7 @@ export default function HomePage() {
             <h1 className="font-blackletter reveal" style={{ fontSize: 'clamp(3rem,12vw,4.5rem)', color: '#e5b876', lineHeight: 1, textTransform: 'lowercase' }}>
               hidden ivory
             </h1>
-            
+
             <div className="reveal reveal-delay-1" style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
               <img src={heroImg} alt="Hidden Ivory Signature Shirt" style={{ maxWidth: '85%', height: 'auto', borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }} />
             </div>
@@ -71,13 +71,13 @@ export default function HomePage() {
               <h1 className="font-blackletter" style={{ fontSize: 'clamp(3.5rem,8vw,5.5rem)', color: '#e5b876', lineHeight: 1, marginBottom: '0.2rem', textTransform: 'lowercase' }}>
                 hidden ivory
               </h1>
-              
+
               <p className="font-blackletter" style={{ color: '#5e4018', fontSize: '1.25rem', marginBottom: '2.5rem', letterSpacing: '0.05em' }}>
                 Find your identity. Find your treasure.
               </p>
-              
+
               <p className="font-display" style={{ color: '#ffffff', fontSize: '1.1rem', lineHeight: 1.8, marginBottom: '2rem', maxWidth: 500 }}>
-                In the dark shadows of Soweto, a mining town, a miner dug and dug until he found treasure. He handed the treasure to his boss, yet he himself held no value. Day after day, he returned underground, digging after digging, leaving with nothing in his hands. So, who is truly valuable: the miner, the gold, the one who finds it, or the treasure itself?
+                In the dark shadows of Soweto, in a mining town, a miner dug and dug until he found treasure. He handed the treasure to his boss, yet he himself held no value. Day after day, he returned underground, digging after digging, leaving with nothing in his hands. So, who is truly valuable: the miner, the gold, the one who finds it, or the treasure itself?
                 <br /><br />
                 This is <span className="font-blackletter" style={{ color: '#e5b876', fontSize: '1.2rem', padding: '0 4px' }}>Hidden Ivory</span>. Find your identity. Find your treasure.
               </p>
@@ -87,9 +87,9 @@ export default function HomePage() {
               </Link>
             </div>
 
-              <div className="reveal reveal-delay-1" style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-                <img src={heroImg} alt="Hidden Ivory Signature Shirt" style={{ maxWidth: '100%', height: 'auto', borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }} />
-              </div>
+            <div className="reveal reveal-delay-1" style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+              <img src={heroImg} alt="Hidden Ivory Signature Shirt" style={{ maxWidth: '100%', height: 'auto', borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }} />
+            </div>
           </div>
         )}
 
@@ -106,7 +106,7 @@ export default function HomePage() {
           </div>
 
           {loading ? (
-            <div style={{ textAlign:'center', padding:'3rem', fontFamily:'"Cormorant SC",serif', fontSize:'0.85rem', letterSpacing:'0.2em', color:'#000000' }}>Loading…</div>
+            <div style={{ textAlign: 'center', padding: '3rem', fontFamily: '"Cormorant SC",serif', fontSize: '0.85rem', letterSpacing: '0.2em', color: '#000000' }}>Loading…</div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'clamp(0.75rem, 3vw, 1.5rem)' }}>
               {(products.filter(p => p.isFeatured).length === 4 ? products.filter(p => p.isFeatured) : products.slice(0, 4)).map((p, i) => (
@@ -135,10 +135,10 @@ export default function HomePage() {
             <p className="font-blackletter reveal reveal-delay-1" style={{ color: '#5e4018', fontSize: '1.25rem', marginBottom: '1.5rem', letterSpacing: '0.05em' }}>
               Find your identity. Find your treasure.
             </p>
-            
+
             <p className="font-display reveal reveal-delay-2" style={{ color: '#ffffff', fontSize: '1.05rem', lineHeight: 1.8, marginBottom: '2rem', textAlign: 'left' }}>
               In the dark shadows of Soweto, a mining town, a miner dug and dug until he found treasure. He handed the treasure to his boss, yet he himself held no value. Day after day, he returned underground, digging after digging, leaving with nothing in his hands. So, who is truly valuable: the miner, the gold, the one who finds it, or the treasure itself?
-              <br/><br/>
+              <br /><br />
               This is <span className="font-blackletter" style={{ color: '#e5b876', fontSize: '1.1rem', padding: '0 4px' }}>Hidden Ivory</span>. Find your identity. Find your treasure.
             </p>
           </div>
