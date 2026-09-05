@@ -26,7 +26,7 @@ function StarRating({ value, onChange, size = 28 }: { value: number; onChange: (
           onClick={() => onChange(star)}
           style={{
             background: 'none', border: 'none', cursor: 'pointer', padding: 2,
-            color: star <= (hover || value) ? '#5e4018' : 'rgba(94,64,24,0.25)',
+            color: star <= (hover || value) ? '#5e4018' : '#e5b876',
             transition: 'color 0.2s ease, transform 0.15s ease',
             transform: star <= (hover || value) ? 'scale(1.15)' : 'scale(1)',
           }}
@@ -141,7 +141,7 @@ export default function ExperiencePage() {
         <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.2rem', color: '#ffffff', marginBottom: '0.75rem', maxWidth: 450, lineHeight: 1.7 }}>
           We listen. We learn. We evolve.
         </p>
-        <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.5)', marginBottom: '3rem', maxWidth: 450, fontStyle: 'italic' }}>
+        <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.1rem', color: '#e5b876', marginBottom: '3rem', maxWidth: 450, fontStyle: 'italic' }}>
           Find your identity. Find your treasure.
         </p>
         <a href="/shop" className="btn-gold">
@@ -168,10 +168,10 @@ export default function ExperiencePage() {
         <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.15rem', color: '#ffffff', lineHeight: 1.9, marginBottom: '1rem' }}>
           You found us. Now help us refine what comes next.
         </p>
-        <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.9, marginBottom: '1rem' }}>
+        <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.05rem', color: '#ffffff', lineHeight: 1.9, marginBottom: '1rem' }}>
           Hidden Ivory is built around identity, intention and discovery. Your experience matters to us — not only what you loved, but what you believe we could do better.
         </p>
-        <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.9, fontStyle: 'italic' }}>
+        <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.05rem', color: '#e5b876', lineHeight: 1.9, fontStyle: 'italic' }}>
           Tell us what you found. Tell us what was missing.
         </p>
       </div>
@@ -183,9 +183,9 @@ export default function ExperiencePage() {
         <div style={sectionStyle}>
           <label style={labelStyle}>How was your overall experience?</label>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <span style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)' }}>Not the one</span>
+            <span style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '0.9rem', color: '#ffffff' }}>Not the one</span>
             <StarRating value={overall} onChange={setOverall} size={32} />
-            <span style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)' }}>You hit the spot</span>
+            <span style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '0.9rem', color: '#ffffff' }}>You hit the spot</span>
           </div>
         </div>
 
@@ -241,8 +241,8 @@ export default function ExperiencePage() {
                   onClick={() => toggleProcess(option)}
                   style={{
                     background: selected ? '#5e4018' : 'transparent',
-                    border: `1px solid ${selected ? '#5e4018' : 'rgba(94,64,24,0.3)'}`,
-                    color: selected ? '#ffffff' : 'rgba(255,255,255,0.7)',
+                    border: `1px solid ${selected ? '#5e4018' : '#e5b876'}`,
+                    color: '#ffffff',
                     fontFamily: '"Cormorant Garamond",serif',
                     fontSize: '0.95rem',
                     padding: '0.6rem 1.25rem',
@@ -310,7 +310,7 @@ export default function ExperiencePage() {
         </div>
 
         {error && (
-          <p style={{ color: '#ff6b6b', fontFamily: 'system-ui, sans-serif', fontSize: '0.9rem', marginBottom: '1.5rem', textAlign: 'center' }}>{error}</p>
+          <p style={{ color: '#e5b876', fontFamily: 'system-ui, sans-serif', fontSize: '0.9rem', marginBottom: '1.5rem', textAlign: 'center' }}>{error}</p>
         )}
 
         {/* Submit */}
