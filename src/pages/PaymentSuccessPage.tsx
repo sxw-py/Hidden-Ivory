@@ -41,7 +41,11 @@ export default function PaymentSuccessPage() {
         You will receive a confirmation email shortly with your order details.
       </p>
 
-      <button onClick={() => navigate('/shop')} className="btn-gold">
+      <button onClick={() => navigate('/experience')} className="btn-gold" style={{ marginBottom: '1.25rem' }}>
+        <span>Share Your Experience</span>
+      </button>
+
+      <button onClick={() => navigate('/shop')} className="btn-outline" style={{ borderColor: 'rgba(229,184,118,0.3)', color: 'rgba(255,255,255,0.6)' }}>
         <span>Continue Shopping</span>
       </button>
     </div>

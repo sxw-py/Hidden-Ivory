@@ -92,6 +92,9 @@ Deno.serve(async (req) => {
                   <p style="font-family: system-ui, sans-serif; font-size: 1rem;">${order.shipping_address}</p>
                 </div>
                 <p style="font-size: 1rem; line-height: 1.6; color: rgba(255,255,255,0.7);">We will notify you when your order has been shipped. If you have any questions, feel free to reply to this email.</p>
+                <div style="text-align: center; margin: 2rem 0;">
+                  <a href="https://hiddenivory.com/experience" style="display: inline-block; padding: 0.875rem 2.5rem; background: #5e4018; color: #ffffff; text-decoration: none; font-family: Georgia, serif; font-size: 0.9rem; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 999px;">Share Your Experience</a>
+                </div>
                 <hr style="border: none; height: 1px; background: #e5b876; opacity: 0.3; margin: 2rem 0;" />
                 <p style="text-align: center; color: rgba(255,255,255,0.4); font-size: 0.85rem;">Hidden Ivory — Luxury Streetwear</p>
               </div>

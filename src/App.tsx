@@ -14,6 +14,7 @@ import AdminPage from './pages/AdminPage';
 import CheckoutPage from './pages/CheckoutPage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import PaymentFailurePage from './pages/PaymentFailurePage';
+import ExperiencePage from './pages/ExperiencePage';
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/payment-success" element={<PaymentSuccessPage />} />
                 <Route path="/payment-failure" element={<PaymentFailurePage />} />
+                <Route path="/experience" element={<ExperiencePage />} />
                 <Route path="*" element={<HomePage />} />
               </Routes>
             </main>
