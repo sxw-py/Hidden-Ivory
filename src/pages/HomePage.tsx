@@ -32,14 +32,33 @@ export default function HomePage() {
   const [heroImg, setHeroImg] = useState('/brand_story.png');
   useReveal([products]);
 
+let cachedHeroImg: string | null = null;
+let cachedHeroPromise: Promise<string> | null = null;
+
   useEffect(() => {
-    supabase.storage.from('product-images').list('hero', { limit: 1, sortBy: { column: 'created_at', order: 'desc' } })
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(`hero/${data[0].name}`);
-          setHeroImg(publicUrl);
-        }
-      });
+    if (cachedHeroImg) {
+      setHeroImg(cachedHeroImg);
+      return;
+    }
+    
+    if (!cachedHeroPromise) {
+      cachedHeroPromise = supabase.storage.from('product-images')
+        .list('hero', { limit: 1, sortBy: { column: 'created_at', order: 'desc' } })
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(`hero/${data[0].name}`);
+            cachedHeroImg = publicUrl;
+            return publicUrl;
+          }
+          return '/brand_story.png';
+        });
+    }
+
+    cachedHeroPromise.then(url => {
+      setHeroImg(url);
+    }).catch(() => {
+      // fallback
+    });
   }, []);
 
   return (

@@ -18,41 +18,67 @@ function mapRow(row: Record<string, unknown>): Product {
   };
 }
 
+let globalProductsCache: Product[] | null = null;
+let globalProductsPromise: Promise<Product[]> | null = null;
+
 export function useProducts() {
-  const [products, setProducts] = useState<Product[]>(staticProducts);
-  const [loading,  setLoading]  = useState(true);
+  const [products, setProducts] = useState<Product[]>(globalProductsCache || staticProducts);
+  const [loading,  setLoading]  = useState(!globalProductsCache);
   const [error,    setError]    = useState<string | null>(null);
 
-  const fetchProducts = () => {
+  const fetchProducts = (force = false) => {
+    if (globalProductsCache && !force) {
+      setProducts(globalProductsCache);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
-    supabase.from('products').select('*')
-      .then(
-        ({ data, error }) => {
-          if (error || !data || data.length === 0) {
-            setError(error?.message ?? null);
-          } else {
-            setProducts(data.map(mapRow));
-          }
-          setLoading(false);
-        },
-        () => setLoading(false)
-      );
+
+    if (!globalProductsPromise || force) {
+      globalProductsPromise = (async () => {
+        const { data, error } = await supabase.from('products').select('*');
+        if (error || !data || data.length === 0) {
+          throw new Error(error?.message ?? 'No products found');
+        }
+        const mapped = data.map(mapRow);
+        globalProductsCache = mapped;
+        return mapped;
+      })();
+    }
+
+    globalProductsPromise
+      .then((mapped) => {
+        setProducts(mapped);
+        setError(null);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
-  return { products, loading, error, refresh: fetchProducts };
+  return { products, loading, error, refresh: () => fetchProducts(true) };
 }
 
 export function useProduct(id: string) {
-  const staticMatch = staticProducts.find(p => p.id === id) ?? null;
-  const [product, setProduct] = useState<Product | null>(staticMatch);
-  const [loading, setLoading] = useState(true);
+  const cachedMatch = globalProductsCache?.find(p => p.id === id) || staticProducts.find(p => p.id === id) || null;
+  const [product, setProduct] = useState<Product | null>(cachedMatch);
+  const [loading, setLoading] = useState(!cachedMatch);
   const [error,   setError]   = useState<string | null>(null);
 
   useEffect(() => {
+    if (cachedMatch) {
+      setProduct(cachedMatch);
+      setLoading(false);
+      return;
+    }
+
     supabase.from('products').select('*').eq('id', id).single()
       .then(
         ({ data, error }) => {
@@ -65,7 +91,7 @@ export function useProduct(id: string) {
         },
         () => setLoading(false)
       );
-  }, [id]);
+  }, [id, cachedMatch]);
 
   return { product, loading, error };
 }
