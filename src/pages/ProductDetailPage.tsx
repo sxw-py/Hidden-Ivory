@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, Navigate } from 'react-router-dom';
+import { useParams, Link, Navigate, useNavigate } from 'react-router-dom';
 import Carousel from '../components/Carousel';
 import ProductCard from '../components/ProductCard';
 import { useProduct, useProducts } from '../lib/useProducts';
 import { useCart } from '../contexts/CartContext';
+import { getGroupForProduct, parseColor } from '../lib/productGrouping';
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { product, loading: productLoading } = useProduct(id!);
   const { products } = useProducts();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   const { addToCart } = useCart();
 
@@ -26,16 +29,42 @@ export default function ProductDetailPage() {
 
   if (!product) return <Navigate to="/shop" replace />;
 
+  // Find if this product belongs to a grouped family (e.g. Du-Rag with Metallic & Velvet)
+  const group = getGroupForProduct(product.id, products);
+  const hasGroupVariants = Boolean(group && group.hasMultipleColors && group.variants.length > 1);
+
+  // Active variant if part of group
+  const activeVariant = hasGroupVariants && group
+    ? group.variants.find(v => v.product.id === product.id) || group.variants[0]
+    : null;
+
+  // Single-product colors fallback (if product has internal colors list without separate DB items)
+  const standaloneColors = (!hasGroupVariants && product.colors && product.colors.length > 0)
+    ? product.colors.map(c => parseColor(c))
+    : [];
+
+  const effectiveColor = activeVariant
+    ? activeVariant.colorName
+    : (selectedColor || (standaloneColors.length > 0 ? standaloneColors[0].name : undefined));
+
   const handleAdd = () => {
     if (product.sizes && !selectedSize) return;
-    addToCart(product.id, selectedSize || undefined);
+    if (standaloneColors.length > 0 && !selectedColor) return;
+    addToCart(product.id, selectedSize || undefined, effectiveColor);
   };
 
-  const related = products.filter(p => p.id !== product.id).slice(0, 3);
+  // Filter out any variants of the same product from "You may also like"
+  const related = products.filter(p => {
+    if (p.id === product.id) return false;
+    if (group && group.variants.some(v => v.product.id === p.id)) return false;
+    return true;
+  }).slice(0, 3);
 
   const isTee = product.name.toLowerCase().includes('tee');
   const isCropTop = product.name.toLowerCase().includes('crop top');
   const hasSizeGuide = isTee || isCropTop;
+
+  const displayName = hasGroupVariants && group ? group.baseName : product.name;
 
   return (
     <>
@@ -50,7 +79,7 @@ export default function ProductDetailPage() {
                 onMouseLeave={e => ((e.target as HTMLElement).style.color = '#000000')}>{label}</Link><span>/</span>
             </span>
           ))}
-          <span style={{ color: '#000000' }}>{product.name}</span>
+          <span style={{ color: '#000000' }}>{displayName}</span>
         </div>
 
         {/* Main layout */}
@@ -63,9 +92,13 @@ export default function ProductDetailPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
             <div>
               <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.85rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#ffffff', marginBottom: '0.5rem', fontWeight: 'bold' }}>{product.category}</p>
-              <h1 style={{ fontFamily: '"Cormorant Garamond",serif', fontWeight: 'bold', fontSize: 'clamp(2rem,5vw,3rem)', color: '#ffffff', lineHeight: 1.15, marginBottom: '0.75rem', textShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>{product.name}</h1>
+              <h1 style={{ fontFamily: '"Cormorant Garamond",serif', fontWeight: 'bold', fontSize: 'clamp(2rem,5vw,3rem)', color: '#ffffff', lineHeight: 1.15, marginBottom: '0.75rem', textShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+                {displayName}
+              </h1>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '1.6rem', color: '#000000', fontWeight: 600, letterSpacing: '0.05em' }}>R{product.price.toLocaleString('en-US')}</p>
+                <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.6rem', color: '#000000', fontWeight: 700, letterSpacing: '0.02em' }}>
+                  R{product.price.toLocaleString('en-US')}
+                </p>
                 {!product.inStock && (
                   <span style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.75rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#000000', border: '1px solid #000000', padding: '0.25rem 0.5rem', borderRadius: 4 }}>
                     Out of Stock
@@ -77,6 +110,111 @@ export default function ProductDetailPage() {
             <div style={{ height: 1, background: 'rgba(0,0,0,0.2)' }} />
 
             <p style={{ color: '#000000', fontFamily: '"Cormorant Garamond",serif', fontSize: '1.2rem', lineHeight: 1.85, fontWeight: 500 }}>{product.description}</p>
+
+            {/* Color Swatch Picker (Grouped Products) */}
+            {hasGroupVariants && group && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                  <span style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.9rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#000000', fontWeight: 600 }}>
+                    Color{activeVariant?.colorName ? `: ${activeVariant.colorName}` : ''}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                  {group.variants.map(v => {
+                    const isSelected = v.product.id === product.id;
+                    return (
+                      <button
+                        key={v.product.id}
+                        type="button"
+                        onClick={() => {
+                          if (v.product.id !== product.id) {
+                            navigate(`/shop/${v.product.id}`, { replace: true });
+                          }
+                        }}
+                        title={v.colorName || v.product.name}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          background: isSelected ? 'rgba(0,0,0,0.1)' : 'transparent',
+                          border: isSelected ? '2px solid #000000' : '1px solid rgba(0,0,0,0.3)',
+                          borderRadius: 8,
+                          padding: '0.35rem 0.65rem 0.35rem 0.4rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          transform: isSelected ? 'scale(1.02)' : 'scale(1)',
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: '50%',
+                            backgroundColor: v.colorHex || '#333',
+                            border: '1px solid rgba(0,0,0,0.2)',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                            display: 'inline-block',
+                          }}
+                        />
+                        <span style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.8rem', letterSpacing: '0.1em', color: '#000000', fontWeight: isSelected ? 700 : 500 }}>
+                          {v.colorName || v.product.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Standalone Product Color Picker */}
+            {!hasGroupVariants && standaloneColors.length > 0 && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                  <span style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.9rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#000000', fontWeight: 600 }}>
+                    Color{effectiveColor ? `: ${effectiveColor}` : ''}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                  {standaloneColors.map(c => {
+                    const isSelected = effectiveColor === c.name;
+                    return (
+                      <button
+                        key={c.name}
+                        type="button"
+                        onClick={() => setSelectedColor(c.name)}
+                        title={c.name}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          background: isSelected ? 'rgba(0,0,0,0.1)' : 'transparent',
+                          border: isSelected ? '2px solid #000000' : '1px solid rgba(0,0,0,0.3)',
+                          borderRadius: 8,
+                          padding: '0.35rem 0.65rem 0.35rem 0.4rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: '50%',
+                            backgroundColor: c.hex || '#333',
+                            border: '1px solid rgba(0,0,0,0.2)',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                            display: 'inline-block',
+                          }}
+                        />
+                        <span style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.8rem', letterSpacing: '0.1em', color: '#000000', fontWeight: isSelected ? 700 : 500 }}>
+                          {c.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Size selector */}
             <div>
@@ -102,7 +240,7 @@ export default function ProductDetailPage() {
             </div>
 
             <button onClick={handleAdd} style={{ width: '100%', justifyContent: 'center', opacity: !product.inStock ? 0.5 : 1, cursor: !product.inStock ? 'not-allowed' : 'pointer', background: '#000000', color: '#ffffff', fontFamily: '"Cormorant SC",serif', fontSize: '0.875rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0.875rem 2rem', border: 'none', borderRadius: 999 }}
-              disabled={!product.inStock || !!(product.sizes && !selectedSize)}>
+              disabled={!product.inStock || !!(product.sizes && !selectedSize) || !!(standaloneColors.length > 0 && !selectedColor)}>
               <span>{!product.inStock ? 'Out of Stock' : 'Add to Cart'}</span>
             </button>
 
@@ -145,92 +283,90 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Size Guide Modal */}
-      {
-        showSizeGuide && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setShowSizeGuide(false)} />
-            <div style={{ position: 'relative', background: '#ffffff', color: '#000000', padding: '2rem', borderRadius: 8, maxWidth: 650, width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
-              <button onClick={() => setShowSizeGuide(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', cursor: 'pointer', color: '#000000', padding: '0.5rem' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-              </button>
-              <h2 style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '2rem', marginBottom: '1.5rem', fontWeight: 700, borderBottom: '1px solid rgba(0,0,0,0.1)', paddingBottom: '1rem' }}>Garment Measurement Guide</h2>
+      {showSizeGuide && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setShowSizeGuide(false)} />
+          <div style={{ position: 'relative', background: '#ffffff', color: '#000000', padding: '2rem', borderRadius: 8, maxWidth: 650, width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+            <button onClick={() => setShowSizeGuide(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', cursor: 'pointer', color: '#000000', padding: '0.5rem' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            </button>
+            <h2 style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '2rem', marginBottom: '1.5rem', fontWeight: 700, borderBottom: '1px solid rgba(0,0,0,0.1)', paddingBottom: '1rem' }}>Garment Measurement Guide</h2>
 
-              {isTee && (
-                <>
-                  <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.95rem', marginBottom: '1.5rem', color: '#444' }}>All measurements are provided in centimetres (cm). For the most accurate results, lay the garment flat on a level surface before measuring.</p>
-                  <div style={{ overflowX: 'auto', marginBottom: '2rem' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.9rem' }}>
-                      <thead>
-                        <tr style={{ borderBottom: '2px solid #000' }}>
-                          <th style={{ padding: '0.75rem 0.5rem' }}>Size</th>
-                          <th style={{ padding: '0.75rem 0.5rem' }}>Shoulder</th>
-                          <th style={{ padding: '0.75rem 0.5rem' }}>Chest</th>
-                          <th style={{ padding: '0.75rem 0.5rem' }}>Length</th>
-                          <th style={{ padding: '0.75rem 0.5rem' }}>Sleeve Length</th>
+            {isTee && (
+              <>
+                <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.95rem', marginBottom: '1.5rem', color: '#444' }}>All measurements are provided in centimetres (cm). For the most accurate results, lay the garment flat on a level surface before measuring.</p>
+                <div style={{ overflowX: 'auto', marginBottom: '2rem' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.9rem' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid #000' }}>
+                        <th style={{ padding: '0.75rem 0.5rem' }}>Size</th>
+                        <th style={{ padding: '0.75rem 0.5rem' }}>Shoulder</th>
+                        <th style={{ padding: '0.75rem 0.5rem' }}>Chest</th>
+                        <th style={{ padding: '0.75rem 0.5rem' }}>Length</th>
+                        <th style={{ padding: '0.75rem 0.5rem' }}>Sleeve Length</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[['S', 55, 116, 70, 21.85], ['M', 57, 120, 73, 23.2], ['L', 59.5, 125, 76, 24.55], ['XL', 62, 130, 79, 25.9]].map(row => (
+                        <tr key={row[0]} style={{ borderBottom: '1px solid #ddd' }}>
+                          <td style={{ padding: '0.75rem 0.5rem', fontWeight: 'bold' }}>{row[0]}</td>
+                          <td style={{ padding: '0.75rem 0.5rem' }}>{row[1]}</td>
+                          <td style={{ padding: '0.75rem 0.5rem' }}>{row[2]}</td>
+                          <td style={{ padding: '0.75rem 0.5rem' }}>{row[3]}</td>
+                          <td style={{ padding: '0.75rem 0.5rem' }}>{row[4]}</td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {[['S', 55, 116, 70, 21.85], ['M', 57, 120, 73, 23.2], ['L', 59.5, 125, 76, 24.55], ['XL', 62, 130, 79, 25.9]].map(row => (
-                          <tr key={row[0]} style={{ borderBottom: '1px solid #ddd' }}>
-                            <td style={{ padding: '0.75rem 0.5rem', fontWeight: 'bold' }}>{row[0]}</td>
-                            <td style={{ padding: '0.75rem 0.5rem' }}>{row[1]}</td>
-                            <td style={{ padding: '0.75rem 0.5rem' }}>{row[2]}</td>
-                            <td style={{ padding: '0.75rem 0.5rem' }}>{row[3]}</td>
-                            <td style={{ padding: '0.75rem 0.5rem' }}>{row[4]}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
-              )}
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
 
-              {isCropTop && (
-                <>
-                  <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.95rem', marginBottom: '1.5rem', color: '#444' }}>All measurements are provided in centimetres (cm). For the most accurate results, lay the garment flat on a level surface before measuring.</p>
-                  <div style={{ overflowX: 'auto', marginBottom: '1rem' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.9rem' }}>
-                      <thead>
-                        <tr style={{ borderBottom: '2px solid #000' }}>
-                          <th style={{ padding: '0.75rem 0.5rem' }}>Size</th>
-                          <th style={{ padding: '0.75rem 0.5rem' }}>Shoulder</th>
-                          <th style={{ padding: '0.75rem 0.5rem' }}>Chest</th>
-                          <th style={{ padding: '0.75rem 0.5rem' }}>Length</th>
-                          <th style={{ padding: '0.75rem 0.5rem' }}>Sleeve Length</th>
+            {isCropTop && (
+              <>
+                <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.95rem', marginBottom: '1.5rem', color: '#444' }}>All measurements are provided in centimetres (cm). For the most accurate results, lay the garment flat on a level surface before measuring.</p>
+                <div style={{ overflowX: 'auto', marginBottom: '1rem' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.9rem' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid #000' }}>
+                        <th style={{ padding: '0.75rem 0.5rem' }}>Size</th>
+                        <th style={{ padding: '0.75rem 0.5rem' }}>Shoulder</th>
+                        <th style={{ padding: '0.75rem 0.5rem' }}>Chest</th>
+                        <th style={{ padding: '0.75rem 0.5rem' }}>Length</th>
+                        <th style={{ padding: '0.75rem 0.5rem' }}>Sleeve Length</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[['S', 41, 110, '32 long side / 21.5 short', 23], ['M', 45, 114, '51 long side / 28 short', 23], ['L', 50, 120, '53 long side / 29 short', 23.5], ['XL', 54, 126, '55 long side / 31 short', 24.5]].map(row => (
+                        <tr key={row[0]} style={{ borderBottom: '1px solid #ddd' }}>
+                          <td style={{ padding: '0.75rem 0.5rem', fontWeight: 'bold' }}>{row[0]}</td>
+                          <td style={{ padding: '0.75rem 0.5rem' }}>{row[1]}</td>
+                          <td style={{ padding: '0.75rem 0.5rem' }}>{row[2]}</td>
+                          <td style={{ padding: '0.75rem 0.5rem', whiteSpace: 'nowrap' }}>{row[3]}</td>
+                          <td style={{ padding: '0.75rem 0.5rem' }}>{row[4]}</td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {[['S', 41, 110, '32 long side / 21.5 short', 23], ['M', 45, 114, '51 long side / 28 short', 23], ['L', 50, 120, '53 long side / 29 short', 23.5], ['XL', 54, 126, '55 long side / 31 short', 24.5]].map(row => (
-                          <tr key={row[0]} style={{ borderBottom: '1px solid #ddd' }}>
-                            <td style={{ padding: '0.75rem 0.5rem', fontWeight: 'bold' }}>{row[0]}</td>
-                            <td style={{ padding: '0.75rem 0.5rem' }}>{row[1]}</td>
-                            <td style={{ padding: '0.75rem 0.5rem' }}>{row[2]}</td>
-                            <td style={{ padding: '0.75rem 0.5rem', whiteSpace: 'nowrap' }}>{row[3]}</td>
-                            <td style={{ padding: '0.75rem 0.5rem' }}>{row[4]}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.85rem', color: '#555', fontStyle: 'italic', marginBottom: '2rem' }}>
-                    Note: The garment's length is measured according to its asymmetrical 45-degree angled cut. The measurements therefore include both the longest and shortest points of the hem.
-                  </p>
-                </>
-              )}
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.85rem', color: '#555', fontStyle: 'italic', marginBottom: '2rem' }}>
+                  Note: The garment's length is measured according to its asymmetrical 45-degree angled cut. The measurements therefore include both the longest and shortest points of the hem.
+                </p>
+              </>
+            )}
 
-              <div>
-                <h3 style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.4rem', marginBottom: '1rem', fontWeight: 700 }}>How to Measure</h3>
-                <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1rem', fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.9rem', color: '#333' }}>
-                  <li><strong style={{ color: '#000' }}>Chest:</strong> Measure across the garment from one underarm seam to the other, directly below the armpits.</li>
-                  <li><strong style={{ color: '#000' }}>Shoulder:</strong> Measure across the front of the garment from the point where the left shoulder seam meets the sleeve to the point where the right shoulder seam meets the sleeve.</li>
-                  <li><strong style={{ color: '#000' }}>Length:</strong> Measure from the point where the shoulder seam meets the collar down to the bottom hem of the garment.</li>
-                  <li><strong style={{ color: '#000' }}>Sleeve Length:</strong> Measure from the point where the shoulder seam meets the armhole down to the end of the cuff.</li>
-                </ul>
-              </div>
+            <div>
+              <h3 style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.4rem', marginBottom: '1rem', fontWeight: 700 }}>How to Measure</h3>
+              <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1rem', fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.9rem', color: '#333' }}>
+                <li><strong style={{ color: '#000' }}>Chest:</strong> Measure across the garment from one underarm seam to the other, directly below the armpits.</li>
+                <li><strong style={{ color: '#000' }}>Shoulder:</strong> Measure across the front of the garment from the point where the left shoulder seam meets the sleeve to the point where the right shoulder seam meets the sleeve.</li>
+                <li><strong style={{ color: '#000' }}>Length:</strong> Measure from the point where the shoulder seam meets the collar down to the bottom hem of the garment.</li>
+                <li><strong style={{ color: '#000' }}>Sleeve Length:</strong> Measure from the point where the shoulder seam meets the armhole down to the end of the cuff.</li>
+              </ul>
             </div>
           </div>
-        )
-      }
+        </div>
+      )}
     </>
   );
 }

@@ -3,7 +3,7 @@ import { supabase } from './supabase';
 import { products as staticProducts } from './products';
 import type { Product } from './products';
 
-function mapRow(row: Record<string, unknown>): Product {
+export function mapRow(row: Record<string, unknown>): Product {
   return {
     id:          row.id as string,
     name:        row.name as string,
@@ -13,8 +13,10 @@ function mapRow(row: Record<string, unknown>): Product {
     details:     (row.details as string[]) || [],
     category:    row.category as string,
     sizes:       (row.sizes as string[] | null) ?? undefined,
+    colors:      (row.colors as string[] | null) ?? undefined,
     inStock:     row.in_stock as boolean,
     isFeatured:  (row.is_featured as boolean) ?? false,
+    sortOrder:   (row.sort_order as number) ?? 0,
   };
 }
 
@@ -37,7 +39,10 @@ export function useProducts() {
 
     if (!globalProductsPromise || force) {
       globalProductsPromise = (async () => {
-        const { data, error } = await supabase.from('products').select('*');
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('sort_order', { ascending: true, nullsFirst: false });
         if (error || !data || data.length === 0) {
           throw new Error(error?.message ?? 'No products found');
         }

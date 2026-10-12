@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import ProductCard from '../components/ProductCard';
 import { useProducts } from '../lib/useProducts';
+import { groupProducts } from '../lib/productGrouping';
 
 export default function ShopPage() {
   const { products, loading } = useProducts();
   const [sortBy, setSortBy] = useState('default');
 
-  const sortedProducts = [...products].sort((a, b) => {
-    if (sortBy === 'price-asc') return a.price - b.price;
-    if (sortBy === 'price-desc') return b.price - a.price;
-    // Default: could be chronological (by id or created_at if available), here we just use original order
-    return 0;
+  const productGroups = groupProducts(products);
+
+  const sortedGroups = [...productGroups].sort((a, b) => {
+    if (sortBy === 'price-asc') return a.primaryProduct.price - b.primaryProduct.price;
+    if (sortBy === 'price-desc') return b.primaryProduct.price - a.primaryProduct.price;
+    const orderA = a.primaryProduct.sortOrder ?? 0;
+    const orderB = b.primaryProduct.sortOrder ?? 0;
+    return orderA - orderB;
   });
 
   return (
@@ -28,7 +32,7 @@ export default function ShopPage() {
         <div style={{ maxWidth:1400, margin:'0 auto' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'2rem', flexWrap:'wrap', gap:'1rem' }}>
             <p style={{ fontFamily:'"Cormorant Garamond",serif', fontSize:'0.9rem', color:'#000000', letterSpacing:'0.05em' }}>
-              {loading ? '…' : `${products.length} pieces`}
+              {loading ? '…' : `${productGroups.length} styles`}
             </p>
             <div style={{ display:'flex', alignItems:'center', gap:'0.75rem' }}>
               <label style={{ fontFamily:'"Cormorant SC",serif', fontSize:'0.75rem', letterSpacing:'0.15em', color:'#000000', textTransform:'uppercase' }}>Sort by</label>
@@ -46,7 +50,9 @@ export default function ShopPage() {
             </div>
           ) : (
             <div className="product-grid">
-              {sortedProducts.map((p, i) => <ProductCard key={p.id} product={p} priority={i===0} />)}
+              {sortedGroups.map((g, i) => (
+                <ProductCard key={g.groupKey} product={g.primaryProduct} group={g} priority={i === 0} />
+              ))}
             </div>
           )}
         </div>

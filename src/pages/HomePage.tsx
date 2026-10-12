@@ -4,6 +4,7 @@ import IntroOverlay from '../components/IntroOverlay';
 import ProductCard from '../components/ProductCard';
 import { useProducts } from '../lib/useProducts';
 import { supabase } from '../lib/supabase';
+import { groupProducts } from '../lib/productGrouping';
 
 function useReveal(deps: unknown[] = []) {
   useEffect(() => {
@@ -128,11 +129,16 @@ let cachedHeroPromise: Promise<string> | null = null;
             <div style={{ textAlign: 'center', padding: '3rem', fontFamily: '"Cormorant SC",serif', fontSize: '0.85rem', letterSpacing: '0.2em', color: '#000000' }}>Loading…</div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'clamp(0.75rem, 3vw, 1.5rem)' }}>
-              {(products.filter(p => p.isFeatured).length === 4 ? products.filter(p => p.isFeatured) : products.slice(0, 4)).map((p, i) => (
-                <div key={p.id} className={`reveal reveal-delay-${Math.min(i + 1, 4)}`}>
-                  <ProductCard product={p} priority={i === 0} />
-                </div>
-              ))}
+              {(() => {
+                const productGroups = groupProducts(products);
+                const featuredGroups = productGroups.filter(g => g.variants.some(v => v.product.isFeatured));
+                const displayGroups = featuredGroups.length === 4 ? featuredGroups : productGroups.slice(0, 4);
+                return displayGroups.map((g, i) => (
+                  <div key={g.groupKey} className={`reveal reveal-delay-${Math.min(i + 1, 4)}`}>
+                    <ProductCard product={g.primaryProduct} group={g} priority={i === 0} />
+                  </div>
+                ));
+              })()}
             </div>
           )}
 

@@ -4,6 +4,7 @@ export interface CartItem {
   id: string; // locally generated or DB uuid
   product_id: string;
   size?: string;
+  color?: string;
   quantity: number;
 }
 
@@ -12,7 +13,7 @@ interface CartContextType {
   isDrawerOpen: boolean;
   openDrawer: () => void;
   closeDrawer: () => void;
-  addToCart: (productId: string, size: string | undefined, quantity?: number) => void;
+  addToCart: (productId: string, size?: string, color?: string, quantity?: number) => void;
   updateQuantity: (id: string, delta: number) => void;
   removeFromCart: (id: string) => void;
   clearCart: () => void;
@@ -38,14 +39,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const openDrawer = () => setIsDrawerOpen(true);
   const closeDrawer = () => setIsDrawerOpen(false);
 
-  const addToCart = (productId: string, size: string | undefined, quantity = 1) => {
+  const addToCart = (productId: string, size?: string, color?: string, quantity = 1) => {
     setItems(prev => {
       // Check if exact item already exists
-      const existing = prev.find(i => i.product_id === productId && i.size === size);
+      const existing = prev.find(i => i.product_id === productId && i.size === size && i.color === color);
       if (existing) {
         return prev.map(i => i.id === existing.id ? { ...i, quantity: i.quantity + quantity } : i);
       }
-      return [...prev, { id: crypto.randomUUID(), product_id: productId, size, quantity }];
+      return [...prev, { id: crypto.randomUUID(), product_id: productId, size, color, quantity }];
     });
     openDrawer();
   };

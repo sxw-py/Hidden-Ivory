@@ -73,6 +73,7 @@ export default function CartDrawer() {
                       </button>
                     </div>
                     {item.size && <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', marginTop: '0.25rem' }}>Size: {item.size}</p>}
+                    {item.color && <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', marginTop: '0.25rem' }}>Color: {item.color}</p>}
                     
                     <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', border: '1px solid rgba(229,184,118,0.3)', borderRadius: 4, padding: '0.4rem 0.8rem' }}>

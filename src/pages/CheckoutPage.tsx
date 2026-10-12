@@ -269,6 +269,7 @@ export default function CheckoutPage() {
                   <div style={{ flex: 1 }}>
                     <h4 style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.2rem', color: '#ffffff', margin: 0 }}>{p.name}</h4>
                     {item.size && <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', margin: 0 }}>Size: {item.size}</p>}
+                    {item.color && <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', margin: 0 }}>Color: {item.color}</p>}
                     <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', margin: 0 }}>Qty: {item.quantity}</p>
                   </div>
                   <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '1.1rem', color: '#e5b876' }}>R{(p.price * item.quantity).toLocaleString('en-US')}</p>

@@ -6,6 +6,7 @@ import { useProducts } from '../lib/useProducts';
 import type { Product } from '../lib/products';
 import ProductEditor from '../components/admin/ProductEditor';
 import ImageUploader from '../components/admin/ImageUploader';
+import { parseColor, extractProductColorAndBaseName, PRESET_COLORS } from '../lib/productGrouping';
 
 interface Order {
   id: string;
@@ -16,7 +17,7 @@ interface Order {
   shipping_address: string;
   status: string;
   total_amount: number;
-  items: Array<{ product_id: string; quantity: number; size?: string }>;
+  items: Array<{ product_id: string; quantity: number; size?: string; color?: string }>;
   created_at: string;
 }
 
@@ -70,8 +71,8 @@ export default function AdminPage() {
   const onSaved = (updated: Product) => {
     setLocalProducts(ps => {
       const exists = ps.find(p => p.id === updated.id);
-      if (exists) return ps.map(p => p.id === updated.id ? updated : p);
-      return [updated, ...ps];
+      const updatedList = exists ? ps.map(p => p.id === updated.id ? updated : p) : [updated, ...ps];
+      return [...updatedList].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
     });
     setEditProduct(null);
   };
@@ -181,7 +182,11 @@ export default function AdminPage() {
                 </button>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: '1.25rem' }}>
-              {localProducts.map(p => (
+              {[...localProducts].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)).map(p => {
+                const colorInfo = p.colors?.[0]
+                  ? parseColor(p.colors[0])
+                  : extractProductColorAndBaseName(p, PRESET_COLORS.map(c => c.name)).color;
+                return (
                 <div key={p.id} onClick={() => setEditProduct(p)}
                   style={{ background: '#111', border: '1px solid rgba(229,184,118,0.12)', borderRadius: 8, overflow: 'hidden', cursor: 'pointer', transition: 'border-color 0.3s ease, transform 0.2s ease', position: 'relative' }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#e5b876'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
@@ -201,13 +206,25 @@ export default function AdminPage() {
                   </div>
                   <div style={{ padding: '0.75rem' }}>
                     <p style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.75rem', letterSpacing: '0.1em', color: '#ffffff', marginBottom: '0.25rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</p>
-                    <p style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '0.9rem', color: '#e5b876', fontWeight: 700 }}>R{p.price.toLocaleString('en-US')}</p>
+                    {colorInfo.name && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.35rem' }}>
+                        <span style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: colorInfo.hex || '#333', border: '1px solid rgba(255,255,255,0.2)', display: 'inline-block' }} />
+                        <span style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)' }}>{colorInfo.name}</span>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                      <p style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.95rem', color: '#e5b876', fontWeight: 700, margin: 0 }}>R{p.price.toLocaleString('en-US')}</p>
+                      <span style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', background: '#222', padding: '0.1rem 0.35rem', borderRadius: 3 }}>
+                        #{p.sortOrder ?? 0}
+                      </span>
+                    </div>
                     <span style={{ fontFamily: '"Cormorant SC",serif', fontSize: '0.65rem', letterSpacing: '0.1em', color: p.inStock ? '#4caf82' : '#ff6b6b', textTransform: 'uppercase' }}>
                       {p.inStock ? 'In Stock' : 'Out of Stock'}
                     </span>
                   </div>
                 </div>
-              ))}
+              );
+            })}
             </div>
           </>
           )
@@ -259,7 +276,7 @@ export default function AdminPage() {
                           const p = localProducts.find(prod => prod.id === item.product_id);
                           return (
                             <p key={i} style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.05rem', color: '#fff', marginBottom: '0.25rem' }}>
-                              {item.quantity}× {p ? p.name : 'Unknown Product'}{item.size ? ' (' + item.size + ')' : ''}
+                              {item.quantity}× {p ? p.name : 'Unknown Product'}{item.size ? ' (' + item.size + ')' : ''}{item.color ? ' [' + item.color + ']' : ''}
                             </p>
                           );
                         })}
@@ -319,7 +336,7 @@ export default function AdminPage() {
                           const p = localProducts.find(prod => prod.id === item.product_id);
                           return (
                             <p key={i} style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '1.05rem', color: '#fff', marginBottom: '0.25rem' }}>
-                              {item.quantity}× {p ? p.name : 'Unknown Product'}{item.size ? ' (' + item.size + ')' : ''}
+                              {item.quantity}× {p ? p.name : 'Unknown Product'}{item.size ? ' (' + item.size + ')' : ''}{item.color ? ' [' + item.color + ']' : ''}
                             </p>
                           );
                         })}
